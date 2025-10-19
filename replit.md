@@ -20,8 +20,8 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
 - **Theme**: Light and dark mode toggle with persistent preference, smooth transitions.
 
 ### Technical Implementations
-- **Frontend**: React 18 with TypeScript, Wouter for routing, TanStack Query v5 for server state, Recharts for visualizations, Framer Motion for animations.
-- **Backend**: Express.js server.
+- **Frontend**: React 18 with TypeScript, Wouter for routing, TanStack Query v5 for server state, Recharts for visualizations, Framer Motion for animations, Tiptap rich text editor.
+- **Backend**: Express.js server with Multer for file uploads (custom sounds, journal images).
 - **Authentication**: Replit Auth integration supporting multiple providers (Google, GitHub, X, Apple, email/password) with secure, session-based authentication persisted in PostgreSQL. All application features require authentication, and user data is isolated.
 - **AI Integration**: OpenAI API (GPT-4o-mini) via Replit AI Integrations for a compassionate AI companion, with conversation history persistence.
 - **Assessment Tools**: Comprehensive collection of 6 validated mental health screening tools (PHQ-9, GAD-7, PSS-10, Rosenberg Self-Esteem, UCLA Loneliness, PCL-5 Short) with randomized question presentation, auto-advancing flows, color-coded score interpretation, proper reverse scoring, and historical tracking.
@@ -31,9 +31,9 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
 ### Feature Specifications
 - **Dashboard**: Real-time statistics, 7-day mood trend.
 - **Mood Tracker**: Log daily moods with intensity, notes, and a 30-day visual calendar.
-- **Digital Journal**: Rich text editor for entries with chronological timeline.
+- **Digital Journal**: Rich HTML editor powered by Tiptap with full formatting capabilities (bold, italic, underline, headings, lists, alignment), image upload support (10MB limit, JPEG/PNG/GIF/WebP), and chronological timeline display.
 - **Meditation & Breathing**: Guided exercises with interactive timers and session tracking.
-- **Soothing Sounds**: 5 ambient soundscapes (Ocean Waves, Rainfall, Wind Chimes, Crackling Fire, White Noise) with volume control, persistent player, and continuous playback across all pages via global audio context.
+- **Soothing Sounds**: 5 ambient soundscapes (Ocean Waves, Rainfall, Wind Chimes, Crackling Fire, White Noise) plus custom MP3 upload feature with volume control, persistent player, and continuous playback across all pages via global audio context. User-isolated storage with 50MB file limit.
 - **Self-Assessment Tools**: 
   - **Depression**: PHQ-9 (9 questions, 5-level severity)
   - **Anxiety**: GAD-7 (7 questions, 4-level severity)
@@ -47,9 +47,10 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
   - **Category Organization**: Assessments grouped by mental health domain
 
 ### System Design Choices
-- **Data Isolation**: All user data (moods, journals, assessments, chat history, meditation sessions, therapist profiles) is scoped to authenticated users.
+- **Data Isolation**: All user data (moods, journals, assessments, chat history, meditation sessions, therapist profiles, custom sounds, uploaded images) is scoped to authenticated users.
 - **Validation**: Zod schemas used for data validation.
 - **Modularity**: Project structure separates client, server, and shared components.
+- **File Storage**: Uploaded files stored in `uploads/sounds/` and `uploads/journal-images/` directories with automatic cleanup on deletion.
 
 ## External Dependencies
 - **Database**: PostgreSQL (Neon) with Drizzle ORM for data persistence and session storage.
