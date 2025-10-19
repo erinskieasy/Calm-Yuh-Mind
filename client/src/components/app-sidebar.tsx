@@ -6,6 +6,8 @@ import {
   MessageCircle,
   ClipboardList,
   Music,
+  UserCircle,
+  Search,
 } from "lucide-react";
 import {
   Sidebar,
@@ -20,7 +22,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Link, useLocation } from "wouter";
 
-const menuItems = [
+const wellnessItems = [
   {
     title: "Dashboard",
     url: "/",
@@ -58,6 +60,19 @@ const menuItems = [
   },
 ];
 
+const professionalItems = [
+  {
+    title: "Find Therapists",
+    url: "/find-therapists",
+    icon: Search,
+  },
+  {
+    title: "Therapist Profile",
+    url: "/therapist-profile",
+    icon: UserCircle,
+  },
+];
+
 export function AppSidebar() {
   const [location] = useLocation();
 
@@ -71,10 +86,32 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>Wellness Tools</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {wellnessItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location === item.url}
+                    data-testid={`link-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
+                    <Link href={item.url}>
+                      <item.icon className="h-5 w-5" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Professional Support</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {professionalItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild

@@ -17,6 +17,8 @@ import Meditation from "@/pages/meditation";
 import Chat from "@/pages/chat";
 import Assessment from "@/pages/assessment";
 import Sounds from "@/pages/sounds";
+import TherapistProfile from "@/pages/therapist-profile";
+import FindTherapists from "@/pages/find-therapists";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -40,6 +42,8 @@ function Router() {
       <Route path="/chat" component={Chat} />
       <Route path="/assessment" component={Assessment} />
       <Route path="/sounds" component={Sounds} />
+      <Route path="/therapist-profile" component={TherapistProfile} />
+      <Route path="/find-therapists" component={FindTherapists} />
       <Route component={NotFound} />
     </Switch>
   );
