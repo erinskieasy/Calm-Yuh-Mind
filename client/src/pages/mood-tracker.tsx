@@ -7,6 +7,8 @@ import { Smile, Frown, Meh, Laugh, Angry } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { MoodEntry, InsertMoodEntry } from "@shared/schema";
+import { motion, AnimatePresence } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
 
 const moods = [
   { name: "joyful", icon: Laugh, color: "hsl(45, 85%, 70%)", label: "Joyful" },
@@ -16,10 +18,59 @@ const moods = [
   { name: "sad", icon: Angry, color: "hsl(210, 35%, 60%)", label: "Sad" },
 ];
 
+interface BubbleProps {
+  Icon: LucideIcon;
+  color: string;
+  delay: number;
+}
+
+function Bubble({ Icon, color, delay }: BubbleProps) {
+  const randomX = Math.random() * 200 - 100;
+  const randomRotate = Math.random() * 360;
+  
+  return (
+    <motion.div
+      initial={{ 
+        opacity: 0, 
+        y: 0, 
+        x: 0,
+        scale: 0.5,
+        rotate: 0
+      }}
+      animate={{ 
+        opacity: [0, 1, 1, 0], 
+        y: -200,
+        x: randomX,
+        scale: [0.5, 1.2, 1, 0.8],
+        rotate: randomRotate
+      }}
+      transition={{ 
+        duration: 2,
+        delay,
+        ease: "easeOut"
+      }}
+      className="absolute pointer-events-none"
+      style={{
+        left: "50%",
+        top: "50%",
+      }}
+    >
+      <div
+        className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+        style={{ backgroundColor: color }}
+      >
+        <Icon className="w-6 h-6 text-white" />
+      </div>
+    </motion.div>
+  );
+}
+
 export default function MoodTracker() {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [intensity, setIntensity] = useState(3);
   const [note, setNote] = useState("");
+  const [showBubbles, setShowBubbles] = useState(false);
+  const [bubbleMood, setBubbleMood] = useState<{ icon: LucideIcon; color: string } | null>(null);
   const { toast } = useToast();
 
   const { data: moodEntries = [], isLoading } = useQuery<MoodEntry[]>({
@@ -31,6 +82,13 @@ export default function MoodTracker() {
       return await apiRequest("POST", "/api/moods", data);
     },
     onSuccess: () => {
+      const currentMoodConfig = moods.find((m) => m.name === selectedMood);
+      if (currentMoodConfig) {
+        setBubbleMood({ icon: currentMoodConfig.icon, color: currentMoodConfig.color });
+        setShowBubbles(true);
+        setTimeout(() => setShowBubbles(false), 2500);
+      }
+      
       queryClient.invalidateQueries({ queryKey: ["/api/moods"] });
       toast({
         title: "Mood logged",
@@ -71,7 +129,21 @@ export default function MoodTracker() {
         </p>
       </div>
 
-      <Card className="p-6">
+      <Card className="p-6 relative overflow-visible">
+        <AnimatePresence>
+          {showBubbles && bubbleMood && (
+            <>
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Bubble
+                  key={i}
+                  Icon={bubbleMood.icon}
+                  color={bubbleMood.color}
+                  delay={i * 0.15}
+                />
+              ))}
+            </>
+          )}
+        </AnimatePresence>
         <CardHeader className="px-0 pt-0">
           <CardTitle className="text-xl font-display">Log Your Mood</CardTitle>
         </CardHeader>

@@ -196,6 +196,7 @@ export const upsertUserSchema = createInsertSchema(users).pick({
 
 export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({
   id: true,
+  userId: true,
   createdAt: true,
 });
 
