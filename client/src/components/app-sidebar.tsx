@@ -1,0 +1,97 @@
+import {
+  Home,
+  Smile,
+  BookOpen,
+  BrainCircuit,
+  MessageCircle,
+  ClipboardList,
+  Music,
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarHeader,
+} from "@/components/ui/sidebar";
+import { Link, useLocation } from "wouter";
+
+const menuItems = [
+  {
+    title: "Dashboard",
+    url: "/",
+    icon: Home,
+  },
+  {
+    title: "Mood Tracker",
+    url: "/mood",
+    icon: Smile,
+  },
+  {
+    title: "Journal",
+    url: "/journal",
+    icon: BookOpen,
+  },
+  {
+    title: "Meditation",
+    url: "/meditation",
+    icon: BrainCircuit,
+  },
+  {
+    title: "AI Support",
+    url: "/chat",
+    icon: MessageCircle,
+  },
+  {
+    title: "Assessments",
+    url: "/assessment",
+    icon: ClipboardList,
+  },
+  {
+    title: "Soothing Sounds",
+    url: "/sounds",
+    icon: Music,
+  },
+];
+
+export function AppSidebar() {
+  const [location] = useLocation();
+
+  return (
+    <Sidebar>
+      <SidebarHeader className="p-6">
+        <h1 className="text-2xl font-display font-semibold text-foreground">
+          Serenity
+        </h1>
+        <p className="text-sm text-muted-foreground">Your wellness companion</p>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location === item.url}
+                    data-testid={`link-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
+                    <Link href={item.url}>
+                      <item.icon className="h-5 w-5" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
+  );
+}
