@@ -1,11 +1,22 @@
 import { createContext, useContext, useState, useRef, useEffect, ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { CustomSound } from "@shared/schema";
 import oceanSoundsAudio from "@assets/Ocean Sounds_1760846545743.mp3";
 import windChimesAudio from "@assets/Wind Chimes_1760847358473.mp3";
 import fireplaceAudio from "@assets/Crackling Sounds_1760848106418.mp3";
 import rainAudio from "@assets/Rain Sounds_1760848622709.mp3";
 import whiteNoiseAudio from "@assets/White Noise_1760849619231.mp3";
 
-export const tracks = [
+export interface Track {
+  id: string;
+  name: string;
+  description?: string;
+  color: string;
+  audioSrc?: string;
+  isCustom?: boolean;
+}
+
+export const defaultTracks: Track[] = [
   {
     id: "ocean-waves",
     name: "Ocean Waves",
@@ -54,7 +65,9 @@ interface AudioContextType {
   volume: number;
   togglePlay: (trackId: string) => void;
   setVolume: (volume: number) => void;
-  currentTrack: typeof tracks[0] | null;
+  currentTrack: Track | null;
+  tracks: Track[];
+  refreshCustomSounds: () => void;
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -63,6 +76,24 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const [playing, setPlaying] = useState<string | null>(null);
   const [volume, setVolume] = useState(50);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Fetch custom sounds
+  const { data: customSounds = [], refetch: refreshCustomSounds } = useQuery<CustomSound[]>({
+    queryKey: ["/api/custom-sounds"],
+  });
+
+  // Merge default tracks with custom sounds
+  const tracks: Track[] = [
+    ...defaultTracks,
+    ...customSounds.map(sound => ({
+      id: sound.id,
+      name: sound.name,
+      description: "Custom sound",
+      color: "hsl(180, 50%, 60%)",
+      audioSrc: sound.filePath,
+      isCustom: true,
+    }))
+  ];
 
   const togglePlay = (trackId: string) => {
     if (playing === trackId) {
@@ -101,7 +132,15 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   }, [volume]);
 
   return (
-    <AudioContext.Provider value={{ playing, volume, togglePlay, setVolume, currentTrack }}>
+    <AudioContext.Provider value={{ 
+      playing, 
+      volume, 
+      togglePlay, 
+      setVolume, 
+      currentTrack,
+      tracks,
+      refreshCustomSounds: () => refreshCustomSounds(),
+    }}>
       {children}
       <audio ref={audioRef} style={{ display: 'none' }} />
     </AudioContext.Provider>
