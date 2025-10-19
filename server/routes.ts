@@ -11,13 +11,47 @@ import {
   insertTherapistProfileSchema,
   updateTherapistProfileSchema,
   insertConsultationRequestSchema,
+  insertCustomSoundSchema,
 } from "@shared/schema";
 import { calculateDistance } from "./utils/distance";
 import OpenAI from "openai";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+});
+
+// Configure multer for file uploads
+const uploadsDir = path.join(process.cwd(), "uploads", "sounds");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storageConfig = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storageConfig,
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === "audio/mpeg" || path.extname(file.originalname).toLowerCase() === ".mp3") {
+      cb(null, true);
+    } else {
+      cb(new Error("Only MP3 files are allowed"));
+    }
+  },
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB limit
+  }
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -356,6 +390,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Failed to update request" });
     }
   });
+
+  // Custom sounds routes
+  app.get("/api/custom-sounds", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const sounds = await storage.getCustomSounds(userId);
+      res.json(sounds);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch custom sounds" });
+    }
+  });
+
+  app.post("/api/custom-sounds", isAuthenticated, upload.single("audio"), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const { name } = req.body;
+      if (!name) {
+        // Clean up uploaded file
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ error: "Sound name is required" });
+      }
+
+      const filePath = `/uploads/sounds/${req.file.filename}`;
+      const data = insertCustomSoundSchema.parse({ name, filePath });
+      const sound = await storage.createCustomSound({ ...data, userId });
+      res.json(sound);
+    } catch (error: any) {
+      // Clean up file if database insert fails
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
+      console.error("Upload custom sound error:", error);
+      res.status(400).json({ error: error.message || "Failed to upload custom sound" });
+    }
+  });
+
+  app.delete("/api/custom-sounds/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+
+      // Get the sound to find the file path
+      const sounds = await storage.getCustomSounds(userId);
+      const sound = sounds.find(s => s.id === id);
+
+      if (!sound) {
+        return res.status(404).json({ error: "Sound not found" });
+      }
+
+      // Delete from database
+      await storage.deleteCustomSound(id, userId);
+
+      // Delete file from filesystem
+      const fullPath = path.join(process.cwd(), sound.filePath);
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete custom sound error:", error);
+      res.status(500).json({ error: "Failed to delete custom sound" });
+    }
+  });
+
+  // Serve uploaded files
+  app.use("/uploads", require("express").static(path.join(process.cwd(), "uploads")));
 
   const httpServer = createServer(app);
   return httpServer;
