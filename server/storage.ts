@@ -7,6 +7,7 @@ import {
   assessmentResults,
   therapistProfiles,
   consultationRequests,
+  customSounds,
   type User,
   type UpsertUser,
   type MoodEntry,
@@ -24,6 +25,8 @@ import {
   type UpdateTherapistProfile,
   type ConsultationRequest,
   type InsertConsultationRequest,
+  type CustomSound,
+  type InsertCustomSound,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, sql } from "drizzle-orm";
@@ -69,6 +72,11 @@ export interface IStorage {
     status: string,
     responseMessage?: string
   ): Promise<ConsultationRequest>;
+
+  // Custom sounds
+  getCustomSounds(userId: string): Promise<CustomSound[]>;
+  createCustomSound(sound: InsertCustomSound): Promise<CustomSound>;
+  deleteCustomSound(id: string, userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -301,6 +309,29 @@ export class DatabaseStorage implements IStorage {
       .where(eq(consultationRequests.id, id))
       .returning();
     return request;
+  }
+
+  // Custom sounds
+  async getCustomSounds(userId: string): Promise<CustomSound[]> {
+    return await db
+      .select()
+      .from(customSounds)
+      .where(eq(customSounds.userId, userId))
+      .orderBy(desc(customSounds.createdAt));
+  }
+
+  async createCustomSound(insertSound: InsertCustomSound): Promise<CustomSound> {
+    const [sound] = await db
+      .insert(customSounds)
+      .values(insertSound)
+      .returning();
+    return sound;
+  }
+
+  async deleteCustomSound(id: string, userId: string): Promise<void> {
+    await db
+      .delete(customSounds)
+      .where(and(eq(customSounds.id, id), eq(customSounds.userId, userId)));
   }
 }
 
