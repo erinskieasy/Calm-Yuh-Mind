@@ -70,6 +70,7 @@ export default function Sounds() {
       const currentTrack = tracks.find(t => t.id === playing);
       if (currentTrack?.audioSrc) {
         audio.src = currentTrack.audioSrc;
+        audio.load();
         audio.play().catch(err => {
           console.error("Error playing audio:", err);
         });
