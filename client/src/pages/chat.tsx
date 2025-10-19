@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Bot, User, Loader2, Mic, MicOff } from "lucide-react";
+import { Send, Bot, User, Loader2, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { ChatMessage } from "@shared/schema";
@@ -11,8 +11,11 @@ import type { ChatMessage } from "@shared/schema";
 export default function Chat() {
   const [input, setInput] = useState("");
   const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const speechSynthesisRef = useRef<SpeechSynthesis | null>(null);
   const { toast } = useToast();
 
   const { data: messages = [], isLoading } = useQuery<ChatMessage[]>({
@@ -23,9 +26,14 @@ export default function Chat() {
     mutationFn: async (content: string) => {
       return await apiRequest("POST", "/api/chat", { content });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/chat"] });
       setInput("");
+      
+      // Auto-speak AI response
+      if (autoSpeak && data?.assistant?.content) {
+        speakText(data.assistant.content);
+      }
     },
     onError: () => {
       toast({
@@ -47,6 +55,11 @@ export default function Chat() {
   }, [messages]);
 
   useEffect(() => {
+    // Initialize speech synthesis
+    if ('speechSynthesis' in window) {
+      speechSynthesisRef.current = window.speechSynthesis;
+    }
+
     // Check if browser supports speech recognition
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
@@ -58,8 +71,15 @@ export default function Chat() {
 
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
-        setInput((prev) => prev + (prev ? " " : "") + transcript);
+        setInput(transcript);
         setIsListening(false);
+        
+        // Auto-send after voice input
+        if (transcript.trim()) {
+          setTimeout(() => {
+            sendMessage.mutate(transcript.trim());
+          }, 500);
+        }
       };
 
       recognition.onerror = (event: any) => {
@@ -85,8 +105,54 @@ export default function Chat() {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
+      if (speechSynthesisRef.current) {
+        speechSynthesisRef.current.cancel();
+      }
     };
   }, [toast]);
+
+  const speakText = (text: string) => {
+    if (!speechSynthesisRef.current) {
+      toast({
+        title: "Voice output not supported",
+        description: "Your browser doesn't support voice output.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Cancel any ongoing speech
+    speechSynthesisRef.current.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    // Try to use a more natural voice
+    const voices = speechSynthesisRef.current.getVoices();
+    const preferredVoice = voices.find(voice => 
+      voice.name.includes('Google') || 
+      voice.name.includes('Natural') ||
+      voice.lang === 'en-US'
+    );
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    speechSynthesisRef.current.speak(utterance);
+  };
+
+  const stopSpeaking = () => {
+    if (speechSynthesisRef.current) {
+      speechSynthesisRef.current.cancel();
+      setIsSpeaking(false);
+    }
+  };
 
   const toggleVoiceInput = () => {
     if (!recognitionRef.current) {
@@ -102,6 +168,9 @@ export default function Chat() {
       recognitionRef.current.stop();
       setIsListening(false);
     } else {
+      // Stop any ongoing speech before listening
+      stopSpeaking();
+      
       try {
         recognitionRef.current.start();
         setIsListening(true);
@@ -119,12 +188,26 @@ export default function Chat() {
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       <div className="mb-6">
-        <h1 className="text-4xl font-display font-semibold text-foreground mb-2">
-          AI Support
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          Talk to your compassionate AI wellness companion
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-display font-semibold text-foreground mb-2">
+              AI Voice Support
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Have a voice conversation with your empathetic AI companion
+            </p>
+          </div>
+          <Button
+            variant={autoSpeak ? "default" : "outline"}
+            size="sm"
+            onClick={() => setAutoSpeak(!autoSpeak)}
+            className="gap-2"
+            data-testid="button-toggle-auto-speak"
+          >
+            {autoSpeak ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            {autoSpeak ? "Voice On" : "Voice Off"}
+          </Button>
+        </div>
       </div>
 
       <Card className="flex-1 flex flex-col p-6 overflow-hidden">
@@ -137,10 +220,10 @@ export default function Chat() {
             <div className="flex flex-col items-center justify-center h-full text-center">
               <Bot className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                Start a conversation with your AI companion
+                Click the microphone to start a voice conversation
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                Share what's on your mind, ask for coping strategies, or just chat
+                Speak your thoughts and the AI will respond with voice
               </p>
             </div>
           ) : (
@@ -185,51 +268,76 @@ export default function Chat() {
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <Textarea
-            placeholder="Type your message or use voice input..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit(e);
-              }
-            }}
-            className="resize-none"
-            rows={2}
-            disabled={sendMessage.isPending}
-            data-testid="input-chat-message"
-          />
-          <div className="flex flex-col gap-2">
-            <Button
-              type="button"
-              size="icon"
-              variant={isListening ? "destructive" : "outline"}
-              onClick={toggleVoiceInput}
-              disabled={sendMessage.isPending}
-              data-testid="button-voice-input"
-            >
-              {isListening ? (
-                <MicOff className="h-5 w-5" />
-              ) : (
-                <Mic className="h-5 w-5" />
-              )}
-            </Button>
-            <Button
-              type="submit"
-              size="icon"
-              disabled={!input.trim() || sendMessage.isPending}
-              data-testid="button-send-message"
-            >
-              {sendMessage.isPending ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <Send className="h-5 w-5" />
-              )}
-            </Button>
-          </div>
-        </form>
+        <div className="space-y-3">
+          {isSpeaking && (
+            <div className="flex items-center gap-2 text-primary animate-pulse" data-testid="indicator-ai-speaking">
+              <Volume2 className="h-4 w-4" />
+              <span className="text-sm">AI is speaking...</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={stopSpeaking}
+                data-testid="button-stop-speaking"
+              >
+                Stop
+              </Button>
+            </div>
+          )}
+          
+          {isListening && (
+            <div className="flex items-center gap-2 text-destructive animate-pulse" data-testid="indicator-listening">
+              <Mic className="h-4 w-4" />
+              <span className="text-sm">Listening...</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            <Textarea
+              placeholder="Click mic to speak or type your message..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+              className="resize-none"
+              rows={2}
+              disabled={sendMessage.isPending || isListening}
+              data-testid="input-chat-message"
+            />
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                size="icon"
+                variant={isListening ? "destructive" : "default"}
+                onClick={toggleVoiceInput}
+                disabled={sendMessage.isPending || isSpeaking}
+                data-testid="button-voice-input"
+              >
+                {isListening ? (
+                  <MicOff className="h-5 w-5" />
+                ) : (
+                  <Mic className="h-5 w-5" />
+                )}
+              </Button>
+              <Button
+                type="submit"
+                size="icon"
+                variant="outline"
+                disabled={!input.trim() || sendMessage.isPending || isListening}
+                data-testid="button-send-message"
+              >
+                {sendMessage.isPending ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Send className="h-5 w-5" />
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
       </Card>
     </div>
   );
