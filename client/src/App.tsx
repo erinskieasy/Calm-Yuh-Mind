@@ -21,6 +21,7 @@ import Assessment from "@/pages/assessment";
 import Sounds from "@/pages/sounds";
 import TherapistProfile from "@/pages/therapist-profile";
 import FindTherapists from "@/pages/find-therapists";
+import MiniGames from "@/pages/mini-games";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
@@ -47,6 +48,7 @@ function Router() {
       <Route path="/sounds" component={Sounds} />
       <Route path="/therapist-profile" component={TherapistProfile} />
       <Route path="/find-therapists" component={FindTherapists} />
+      <Route path="/mini-games" component={MiniGames} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>

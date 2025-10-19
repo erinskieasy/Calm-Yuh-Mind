@@ -6,6 +6,7 @@ import {
   MessageCircle,
   ClipboardList,
   Music,
+  Gamepad2,
   UserCircle,
   Search,
   Settings,
@@ -58,6 +59,11 @@ const wellnessItems = [
     title: "Soothing Sounds",
     url: "/sounds",
     icon: Music,
+  },
+  {
+    title: "Mini Games",
+    url: "/mini-games",
+    icon: Gamepad2,
   },
 ];
 
