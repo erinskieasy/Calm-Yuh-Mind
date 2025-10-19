@@ -39,7 +39,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
-      <Route path="/mood" component={MoodTracker} />
+      <Route path="/mood-tracker" component={MoodTracker} />
       <Route path="/journal" component={Journal} />
       <Route path="/meditation" component={Meditation} />
       <Route path="/chat" component={Chat} />

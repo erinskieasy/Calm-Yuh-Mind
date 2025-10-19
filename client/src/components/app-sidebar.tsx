@@ -31,7 +31,7 @@ const wellnessItems = [
   },
   {
     title: "Mood Tracker",
-    url: "/mood",
+    url: "/mood-tracker",
     icon: Smile,
   },
   {
