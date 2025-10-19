@@ -28,12 +28,12 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
 - **Frontend**: React 18 with TypeScript, Wouter for routing, TanStack Query v5 for server state, Recharts for visualizations, Framer Motion for animations, Tiptap rich text editor.
 - **Backend**: Express.js server with Multer for file uploads (custom sounds, journal images).
 - **Authentication**: Replit Auth integration supporting multiple providers (Google, GitHub, X, Apple, email/password) with secure, session-based authentication persisted in PostgreSQL. All application features require authentication, and user data is isolated.
-- **AI Integration**: OpenAI API (GPT-4o-mini) via Replit AI Integrations for a compassionate AI companion with conversation history persistence. Features three voice interaction modes:
+- **AI Integration**: OpenAI API (GPT-4o-mini + Whisper) via Replit AI Integrations for a compassionate AI companion with conversation history persistence. Features three voice interaction modes:
   - **(1) Voice-to-text input**: Quick voice-to-text with automatic AI voice response using Web Speech API
-  - **(2) Voice note recording**: Simple audio message system where users record audio (MediaRecorder captures webm), audio uploaded to server and saved directly as playable voice messages without transcription. Voice notes are standalone audio messages that don't trigger AI responses.
-  - **(3) Text-to-speech output**: AI responses spoken aloud using Web Speech Synthesis API
-  - Voice notes display as playable audio messages with native HTML5 audio controls in chat history
-  - No transcription or AI processing for voice notes - they're pure audio messages for simple playback
+  - **(2) Voice note recording**: Users record audio (MediaRecorder captures webm), audio uploaded to server, OpenAI Whisper transcribes on backend, AI receives transcription and responds. Voice notes stored with playable audio in chat history and display the transcribed text.
+  - **(3) Text-to-speech output**: AI responses spoken aloud using Web Speech Synthesis API (works for both text and voice note responses)
+  - Voice notes display as playable audio messages with native HTML5 audio controls and transcribed text in chat history
+  - Server-side Whisper transcription ensures accuracy and triggers AI responses
   - Text chat enhanced with empathetic, varied responses using higher temperature setting (0.8) and improved system prompt for natural, personalized conversations
 - **Assessment Tools**: Comprehensive collection of 6 validated mental health screening tools (PHQ-9, GAD-7, PSS-10, Rosenberg Self-Esteem, UCLA Loneliness, PCL-5 Short) with randomized question presentation, auto-advancing flows, color-coded score interpretation, proper reverse scoring, and historical tracking.
 - **Therapist Directory**: Interactive OpenStreetMap-based therapist finder with live location support. Uses browser Geolocation API to pinpoint user location, integrates with Overpass API to query OpenStreetMap for mental health professionals (psychotherapists, psychiatrists, mental health clinics) within a configurable radius (1-20km). Displays results on interactive map with markers, popups showing contact details, and visual search radius indicator.

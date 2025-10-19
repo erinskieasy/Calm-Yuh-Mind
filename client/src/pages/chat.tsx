@@ -255,12 +255,17 @@ export default function Chat() {
       // Invalidate chat messages to refresh the list
       queryClient.invalidateQueries({ queryKey: ["/api/chat"] });
 
+      // Auto-speak AI response if enabled
+      if (autoSpeak && data?.assistant?.content) {
+        speakText(data.assistant.content);
+      }
+
       // Clean up after sending
       deleteRecording();
 
       toast({
         title: "Voice note sent",
-        description: "Your voice message has been sent.",
+        description: "AI is responding to your message.",
       });
     } catch (error) {
       console.error("Error sending voice note:", error);
