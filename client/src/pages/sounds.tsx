@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Play, Pause, Volume2 } from "lucide-react";
 import oceanSoundsAudio from "@assets/Ocean Sounds_1760846545743.mp3";
+import windChimesAudio from "@assets/Wind Chimes_1760847358473.mp3";
 
 const tracks = [
   {
@@ -30,6 +31,7 @@ const tracks = [
     name: "Wind Chimes",
     description: "Peaceful chimes in the breeze",
     color: "hsl(280, 40%, 70%)",
+    audioSrc: windChimesAudio,
   },
   {
     id: "fireplace",
@@ -62,10 +64,14 @@ export default function Sounds() {
     const audio = audioRef.current;
     if (!audio) return;
 
-    if (playing === "ocean-waves") {
-      audio.play().catch(err => {
-        console.error("Error playing audio:", err);
-      });
+    if (playing) {
+      const currentTrack = tracks.find(t => t.id === playing);
+      if (currentTrack?.audioSrc) {
+        audio.src = currentTrack.audioSrc;
+        audio.play().catch(err => {
+          console.error("Error playing audio:", err);
+        });
+      }
     } else {
       audio.pause();
       audio.currentTime = 0;
@@ -191,7 +197,6 @@ export default function Sounds() {
 
       <audio
         ref={audioRef}
-        src={oceanSoundsAudio}
         loop
         preload="auto"
       />
