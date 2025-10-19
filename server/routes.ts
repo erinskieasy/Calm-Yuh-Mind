@@ -26,14 +26,19 @@ const openai = new OpenAI({
 });
 
 // Configure multer for file uploads
-const uploadsDir = path.join(process.cwd(), "uploads", "sounds");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+const soundsDir = path.join(process.cwd(), "uploads", "sounds");
+const imagesDir = path.join(process.cwd(), "uploads", "journal-images");
+
+if (!fs.existsSync(soundsDir)) {
+  fs.mkdirSync(soundsDir, { recursive: true });
+}
+if (!fs.existsSync(imagesDir)) {
+  fs.mkdirSync(imagesDir, { recursive: true });
 }
 
-const storageConfig = multer.diskStorage({
+const soundStorageConfig = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, uploadsDir);
+    cb(null, soundsDir);
   },
   filename: (_req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
@@ -41,8 +46,18 @@ const storageConfig = multer.diskStorage({
   }
 });
 
+const imageStorageConfig = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, imagesDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
+    cb(null, "journal-" + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
 const upload = multer({
-  storage: storageConfig,
+  storage: soundStorageConfig,
   fileFilter: (_req, file, cb) => {
     if (file.mimetype === "audio/mpeg" || path.extname(file.originalname).toLowerCase() === ".mp3") {
       cb(null, true);
@@ -52,6 +67,21 @@ const upload = multer({
   },
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB limit
+  }
+});
+
+const imageUpload = multer({
+  storage: imageStorageConfig,
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files (JPEG, PNG, GIF, WebP) are allowed"));
+    }
+  },
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit for images
   }
 });
 
@@ -122,6 +152,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete journal entry" });
+    }
+  });
+
+  // Journal image upload endpoint
+  app.post("/api/journals/upload-image", isAuthenticated, imageUpload.single("image"), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No image uploaded" });
+      }
+
+      const imageUrl = `/uploads/journal-images/${req.file.filename}`;
+      res.json({ url: imageUrl });
+    } catch (error: any) {
+      // Clean up file if upload fails
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
+      console.error("Upload journal image error:", error);
+      res.status(400).json({ error: error.message || "Failed to upload image" });
     }
   });
 
