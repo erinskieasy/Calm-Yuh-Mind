@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { PersistentAudioPlayer } from "@/components/persistent-audio-player";
 import Landing from "@/pages/landing";
+import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import MoodTracker from "@/pages/mood-tracker";
 import Journal from "@/pages/journal";
@@ -46,6 +47,7 @@ function Router() {
     return (
       <Switch>
         <Route path="/" component={Landing} />
+        <Route path="/login" component={Login} />
         <Route component={NotFound} />
       </Switch>
     );
@@ -136,7 +138,10 @@ function AuthenticatedApp({ style }: { style: Record<string, string> }) {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => window.location.href = "/api/logout"}
+                onClick={async () => {
+                  await fetch("/api/logout", { method: "POST" });
+                  window.location.href = "/";
+                }}
                 data-testid="button-logout"
               >
                 Logout

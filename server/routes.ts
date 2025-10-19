@@ -2,7 +2,7 @@ import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./localAuth";
 import {
   insertMoodEntrySchema,
   insertJournalEntrySchema,
@@ -152,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -163,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/user/profile-picture', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const { profileImageUrl } = req.body;
 
       if (!profileImageUrl) {
@@ -193,7 +193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/user/profile-picture/upload', isAuthenticated, profilePictureUpload.single('profileImage'), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       
       if (!req.file) {
         return res.status(400).json({ message: "No image file uploaded" });
@@ -225,7 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Protected routes - require authentication
   app.get("/api/moods", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const month = req.query.month ? parseInt(req.query.month as string) : undefined;
       const year = req.query.year ? parseInt(req.query.year as string) : undefined;
       const moods = await storage.getMoodEntries(userId, month, year);
@@ -237,7 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/moods", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const data = insertMoodEntrySchema.parse(req.body);
       const mood = await storage.createMoodEntry({ ...data, userId });
       res.json(mood);
@@ -248,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/journals", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const journals = await storage.getJournalEntries(userId);
       res.json(journals);
     } catch (error) {
@@ -258,7 +258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/journals", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const data = insertJournalEntrySchema.parse(req.body);
       const journal = await storage.createJournalEntry({ ...data, userId });
       res.json(journal);
@@ -269,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/journals/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       await storage.deleteJournalEntry(req.params.id, userId);
       res.json({ success: true });
     } catch (error) {
@@ -298,7 +298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/meditation-sessions", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const sessions = await storage.getMeditationSessions(userId);
       res.json(sessions);
     } catch (error) {
@@ -308,7 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/meditation-sessions", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const data = insertMeditationSessionSchema.parse(req.body);
       const session = await storage.createMeditationSession({ ...data, userId });
       res.json(session);
@@ -319,7 +319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/chat", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const messages = await storage.getChatMessages(userId);
       res.json(messages);
     } catch (error) {
@@ -330,7 +330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Upload voice note, transcribe, and get AI response
   app.post("/api/chat/voice-note", isAuthenticated, voiceNoteUpload.single("audio"), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       
       if (!req.file) {
         return res.status(400).json({ error: "No audio file uploaded" });
@@ -400,7 +400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/chat", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const { content } = req.body;
       if (!content || typeof content !== "string") {
         return res.status(400).json({ error: "Invalid message content" });
@@ -451,7 +451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/assessments", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const results = await storage.getAssessmentResults(userId);
       res.json(results);
     } catch (error) {
@@ -461,7 +461,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/assessments", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const data = insertAssessmentResultSchema.parse(req.body);
       const result = await storage.createAssessmentResult({ ...data, userId });
       res.json(result);
@@ -473,7 +473,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Therapist profile routes
   app.get("/api/therapist/profile", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const profile = await storage.getTherapistProfile(userId);
       res.json(profile || null);
     } catch (error) {
@@ -483,7 +483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/therapist/profile", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const data = insertTherapistProfileSchema.parse(req.body);
       const profile = await storage.createTherapistProfile({ ...data, userId });
       res.json(profile);
@@ -495,7 +495,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/therapist/profile", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const data = updateTherapistProfileSchema.parse(req.body);
       const profile = await storage.updateTherapistProfile(userId, data);
       res.json(profile);
@@ -507,7 +507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/therapist/profile", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       await storage.deleteTherapistProfile(userId);
       res.json({ success: true });
     } catch (error) {
@@ -564,7 +564,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Consultation request routes
   app.get("/api/consultation-requests", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
 
       if (!user) {
@@ -586,7 +586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/consultation-requests", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const data = insertConsultationRequestSchema.parse({
         ...req.body,
         clientId: userId,
@@ -612,7 +612,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/consultation-requests/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const { id } = req.params;
       const { status, responseMessage } = req.body;
 
@@ -640,7 +640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Custom sounds routes
   app.get("/api/custom-sounds", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const sounds = await storage.getCustomSounds(userId);
       res.json(sounds);
     } catch (error) {
@@ -650,7 +650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/custom-sounds", isAuthenticated, upload.single("audio"), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -679,7 +679,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/custom-sounds/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const { id } = req.params;
 
       // Get the sound to find the file path
@@ -762,7 +762,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/forums/:forumId/posts", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const { forumId } = req.params;
       const postData = insertForumPostSchema.parse({ ...req.body, forumId });
 
@@ -788,7 +788,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/forums/posts/:postId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const { postId } = req.params;
 
       await storage.deleteForumPost(postId, userId);
@@ -812,7 +812,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/forums/posts/:postId/comments", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const { postId } = req.params;
       const commentData = insertForumCommentSchema.parse({ ...req.body, postId });
 
@@ -837,7 +837,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/forums/comments/:commentId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).id;
       const { commentId } = req.params;
 
       await storage.deleteForumComment(commentId, userId);

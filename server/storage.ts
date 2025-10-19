@@ -40,9 +40,11 @@ import { db } from "./db";
 import { eq, desc, and, or, sql } from "drizzle-orm";
 
 export interface IStorage {
-  // User operations (required for Replit Auth)
+  // User operations
   getUser(id: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  createUserWithPassword(user: { username: string; password: string; email?: string | null; firstName?: string | null; lastName?: string | null }): Promise<User>;
 
   // User-specific data operations
   getMoodEntries(userId: string, month?: number, year?: number): Promise<MoodEntry[]>;
@@ -101,9 +103,14 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // User operations (required for Replit Auth)
+  // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
     return user;
   }
 
@@ -117,6 +124,21 @@ export class DatabaseStorage implements IStorage {
           ...userData,
           updatedAt: new Date(),
         },
+      })
+      .returning();
+    return user;
+  }
+
+  async createUserWithPassword(userData: { username: string; password: string; email?: string | null; firstName?: string | null; lastName?: string | null }): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        username: userData.username,
+        password: userData.password,
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        role: "client",
       })
       .returning();
     return user;
