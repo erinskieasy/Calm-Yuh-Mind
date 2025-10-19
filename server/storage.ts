@@ -81,6 +81,7 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const entry: MoodEntry = {
       ...insertEntry,
+      note: insertEntry.note ?? null,
       id,
       createdAt: new Date(),
     };
@@ -102,6 +103,7 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const entry: JournalEntry = {
       ...insertEntry,
+      mood: insertEntry.mood ?? null,
       id,
       createdAt: new Date(),
     };
