@@ -46,8 +46,9 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
 - **Meditation & Breathing**: Guided exercises with interactive timers and session tracking.
 - **Soothing Sounds**: 6 ambient soundscapes (Ocean Waves, Rainfall, Wind Chimes, Crackling Fire, White Noise, Nature Sounds) plus custom MP3 upload feature with volume control, persistent player, and continuous playback across all pages via global audio context. User-isolated storage with 50MB file limit.
 - **Mini Games**: Four calming, wellness-focused games for mindful breaks: Memory Match (peaceful icon matching to improve focus), Breathing Rhythm (follow breathing patterns to calm the mind), Mindful Bubbles (pop bubbles with satisfying sound effects to release stress), and Tic Tac Toe (strategic thinking against AI with score tracking). Each game tracks progress and provides relaxing interactions.
+- **Anonymous Message Forum**: Placeholder page for future community feature where users can share thoughts and connect anonymously. Located at `/anon-forum` in Community section of sidebar.
 - **Settings**: Comprehensive user preferences page with multiple customization options:
-  - **Profile Pictures**: 5 preset emoji avatars (Happy 😊, Flower 🌸, Ocean 🌊, Nature 🌿, Star ⭐) stored in user database
+  - **Profile Pictures**: 4 preset image avatars (Flower 🌸, Leaf 🍃, Moon 🌙, Sun ☀️) using actual image files from attached_assets, plus custom upload functionality (5MB limit, JPEG/PNG/GIF/WebP). Custom uploads stored in `/uploads/profile-pictures/`. Database stores either `preset:flower` (etc.) or `/uploads/profile-pictures/[filename]` path.
   - **Font Styles**: 4 font options including Inter (default), Georgia (serif), Comic Sans (playful), and OpenDyslexic (dyslexia-friendly with enhanced spacing)
   - **Color Themes**: 4 gradient themes with increased saturation (Default sage/blue, Midnight Breeze blue, Tropical Sunset orange/red, Meadow Fields green)
   - **Account**: Logout functionality
@@ -68,7 +69,7 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
 - **Data Isolation**: All user data (moods, journals, assessments, chat history, meditation sessions, therapist profiles, custom sounds, uploaded images) is scoped to authenticated users.
 - **Validation**: Zod schemas used for data validation.
 - **Modularity**: Project structure separates client, server, and shared components.
-- **File Storage**: Uploaded files stored in `uploads/sounds/` and `uploads/journal-images/` directories with automatic cleanup on deletion.
+- **File Storage**: Uploaded files stored in `uploads/sounds/`, `uploads/journal-images/`, and `uploads/profile-pictures/` directories with automatic cleanup on deletion.
 
 ## External Dependencies
 - **Database**: PostgreSQL (Neon) with Drizzle ORM for data persistence and session storage.
