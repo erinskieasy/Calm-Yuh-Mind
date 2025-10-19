@@ -1,26 +1,30 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Palette } from "lucide-react";
+import { Check, Palette, Type, LogOut, User } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import type { User as UserType } from "@shared/schema";
 
 const themes = [
   {
     id: "default",
     name: "Default",
     description: "Calming sage and sky blue",
-    gradient: "linear-gradient(135deg, #81c784 0%, #64b5f6 100%)",
+    gradient: "linear-gradient(135deg, #5fba7d 0%, #42a5f5 100%)",
     preview: {
-      primary: "#81c784",
-      secondary: "#64b5f6",
+      primary: "#5fba7d",
+      secondary: "#42a5f5",
     }
   },
   {
     id: "midnight-breeze",
     name: "Midnight Breeze",
     description: "Light blue to deep midnight",
-    gradient: "linear-gradient(135deg, #89d4f7 0%, #1e3a8a 100%)",
+    gradient: "linear-gradient(135deg, #4fc3f7 0%, #1e3a8a 100%)",
     preview: {
-      primary: "#89d4f7",
+      primary: "#4fc3f7",
       secondary: "#1e3a8a",
     }
   },
@@ -28,26 +32,97 @@ const themes = [
     id: "tropical-sunset",
     name: "Tropical Sunset",
     description: "Warm sunset oranges and reds",
-    gradient: "linear-gradient(135deg, #ff9068 0%, #fd4e50 100%)",
+    gradient: "linear-gradient(135deg, #ff7043 0%, #f44336 100%)",
     preview: {
-      primary: "#ff9068",
-      secondary: "#fd4e50",
+      primary: "#ff7043",
+      secondary: "#f44336",
     }
   },
   {
     id: "meadow-fields",
     name: "Meadow Fields",
     description: "Fresh meadow greens",
-    gradient: "linear-gradient(135deg, #a8e063 0%, #56ab2f 100%)",
+    gradient: "linear-gradient(135deg, #9ccc65 0%, #66bb6a 100%)",
     preview: {
-      primary: "#a8e063",
-      secondary: "#56ab2f",
+      primary: "#9ccc65",
+      secondary: "#66bb6a",
     }
   },
 ];
 
+const fontStyles = [
+  {
+    id: "inter",
+    name: "Inter",
+    description: "Clean, modern sans-serif (default)",
+    preview: "The quick brown fox",
+  },
+  {
+    id: "georgia",
+    name: "Georgia",
+    description: "Classic serif font",
+    preview: "The quick brown fox",
+  },
+  {
+    id: "comic-sans",
+    name: "Comic Sans",
+    description: "Fun, playful style",
+    preview: "The quick brown fox",
+  },
+  {
+    id: "open-dyslexic",
+    name: "OpenDyslexic",
+    description: "Designed for dyslexia accessibility",
+    preview: "The quick brown fox",
+  },
+];
+
+const avatarPresets = [
+  { id: "avatar1", emoji: "😊", name: "Happy", color: "#FFD93D" },
+  { id: "avatar2", emoji: "🌸", name: "Flower", color: "#FF6B9D" },
+  { id: "avatar3", emoji: "🌊", name: "Ocean", color: "#4FC3F7" },
+  { id: "avatar4", emoji: "🌿", name: "Nature", color: "#81C784" },
+  { id: "avatar5", emoji: "⭐", name: "Star", color: "#FFB74D" },
+];
+
 export default function Settings() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, fontStyle, setFontStyle } = useTheme();
+  const { toast } = useToast();
+
+  const { data: user } = useQuery<UserType>({
+    queryKey: ['/api/auth/user'],
+  });
+
+  const updateProfilePictureMutation = useMutation({
+    mutationFn: async (avatarId: string) => {
+      const avatar = avatarPresets.find((a) => a.id === avatarId);
+      if (!avatar) throw new Error("Avatar not found");
+      
+      return apiRequest(`/api/user/profile-picture`, {
+        method: 'PATCH',
+        body: JSON.stringify({ profileImageUrl: avatar.emoji }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      toast({
+        title: "Profile updated",
+        description: "Your profile picture has been updated successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update profile picture. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleLogout = () => {
+    window.location.href = '/api/logout';
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -57,6 +132,109 @@ export default function Settings() {
           Customize your CalmYuhMind experience
         </p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="w-5 h-5" />
+            Profile Picture
+          </CardTitle>
+          <CardDescription>
+            Choose an avatar to represent you
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-5 gap-4">
+            {avatarPresets.map((avatar) => (
+              <button
+                key={avatar.id}
+                onClick={() => updateProfilePictureMutation.mutate(avatar.id)}
+                disabled={updateProfilePictureMutation.isPending}
+                className={`
+                  relative p-4 rounded-lg border-2 transition-all text-center
+                  hover-elevate active-elevate-2
+                  ${user?.profileImageUrl === avatar.emoji 
+                    ? 'border-primary shadow-md' 
+                    : 'border-border'
+                  }
+                `}
+                data-testid={`button-avatar-${avatar.id}`}
+              >
+                {user?.profileImageUrl === avatar.emoji && (
+                  <div className="absolute -top-2 -right-2">
+                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="w-3 h-3 text-primary-foreground" />
+                    </div>
+                  </div>
+                )}
+                
+                <div 
+                  className="text-4xl mb-2"
+                  style={{ backgroundColor: avatar.color + '20' }}
+                >
+                  {avatar.emoji}
+                </div>
+                
+                <p className="text-xs text-muted-foreground">{avatar.name}</p>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Type className="w-5 h-5" />
+            Font Style
+          </CardTitle>
+          <CardDescription>
+            Select a font that's comfortable for reading
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {fontStyles.map((font) => (
+              <button
+                key={font.id}
+                onClick={() => setFontStyle(font.id as any)}
+                className={`
+                  relative p-6 rounded-lg border-2 transition-all text-left
+                  hover-elevate active-elevate-2
+                  ${fontStyle === font.id 
+                    ? 'border-primary shadow-md' 
+                    : 'border-border'
+                  }
+                `}
+                data-testid={`button-font-${font.id}`}
+              >
+                {fontStyle === font.id && (
+                  <div className="absolute top-3 right-3">
+                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="w-4 h-4 text-primary-foreground" />
+                    </div>
+                  </div>
+                )}
+                
+                <h3 className="font-semibold text-lg mb-1">{font.name}</h3>
+                <p className="text-sm text-muted-foreground mb-3">{font.description}</p>
+                
+                <div 
+                  className={`font-${font.id} text-base p-3 bg-muted/30 rounded-md`}
+                  style={{
+                    fontFamily: font.id === 'inter' ? 'Inter, sans-serif' :
+                                font.id === 'georgia' ? 'Georgia, serif' :
+                                font.id === 'comic-sans' ? '"Comic Sans MS", cursive' :
+                                '"OpenDyslexic", Verdana, sans-serif'
+                  }}
+                >
+                  {font.preview}
+                </div>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -116,47 +294,26 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      <Card className="bg-muted/30">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-lg">About Themes</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <LogOut className="w-5 h-5" />
+            Account
+          </CardTitle>
+          <CardDescription>
+            Manage your account settings
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm text-muted-foreground">
-          <p>
-            Each theme is carefully designed to create a specific mood and atmosphere:
-          </p>
-          <ul className="space-y-2 ml-4">
-            <li className="flex gap-2">
-              <span className="text-foreground">•</span>
-              <div>
-                <strong className="text-foreground">Default:</strong> Our original calming sage and sky blue palette, 
-                perfect for balanced mental wellness
-              </div>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-foreground">•</span>
-              <div>
-                <strong className="text-foreground">Midnight Breeze:</strong> Cool blues evoke tranquility and deep reflection, 
-                ideal for evening meditation
-              </div>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-foreground">•</span>
-              <div>
-                <strong className="text-foreground">Tropical Sunset:</strong> Warm tones bring energy and optimism, 
-                great for motivation and mood lifting
-              </div>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-foreground">•</span>
-              <div>
-                <strong className="text-foreground">Meadow Fields:</strong> Fresh greens promote growth and renewal, 
-                perfect for journaling and self-reflection
-              </div>
-            </li>
-          </ul>
-          <p className="pt-2">
-            Your theme preference is saved automatically and will persist across sessions.
-          </p>
+        <CardContent>
+          <Button
+            variant="destructive"
+            onClick={handleLogout}
+            className="w-full md:w-auto"
+            data-testid="button-logout"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Log Out
+          </Button>
         </CardContent>
       </Card>
     </div>

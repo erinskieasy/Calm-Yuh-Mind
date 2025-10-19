@@ -129,6 +129,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
+
+  app.patch('/api/user/profile-picture', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { profileImageUrl } = req.body;
+
+      if (!profileImageUrl) {
+        return res.status(400).json({ message: "Profile image URL is required" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const updatedUser = await storage.upsertUser({
+        id: userId,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: profileImageUrl,
+        role: user.role,
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating profile picture:", error);
+      res.status(500).json({ message: "Failed to update profile picture" });
+    }
+  });
+
   // Protected routes - require authentication
   app.get("/api/moods", isAuthenticated, async (req: any, res) => {
     try {
