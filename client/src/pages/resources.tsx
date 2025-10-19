@@ -5,39 +5,39 @@ import { Button } from "@/components/ui/button";
 
 const articles = [
   {
-    title: "Understanding Anxiety: A Comprehensive Guide",
-    description: "Learn about anxiety disorders, their symptoms, and evidence-based coping strategies.",
-    url: "#",
-    source: "Mental Health Foundation",
+    title: "Understanding Anxiety Disorders",
+    description: "Comprehensive guide to anxiety disorders, their symptoms, and evidence-based treatments.",
+    url: "https://www.nimh.nih.gov/health/topics/anxiety-disorders",
+    source: "National Institute of Mental Health",
   },
   {
-    title: "Managing Depression: Daily Strategies That Work",
-    description: "Practical tips for managing depression symptoms and improving daily functioning.",
-    url: "#",
+    title: "Depression: What You Need to Know",
+    description: "Learn about depression symptoms, causes, treatment options, and where to get help.",
+    url: "https://www.nimh.nih.gov/health/topics/depression",
+    source: "National Institute of Mental Health",
+  },
+  {
+    title: "Mental Health Topics & Articles",
+    description: "Evidence-based articles on anxiety, depression, stress, mindfulness, and emotional wellness.",
+    url: "https://www.health.harvard.edu/topics/mental-health/all",
+    source: "Harvard Health Publishing",
+  },
+  {
+    title: "Mental Health Resources & Support",
+    description: "Trusted information on mental health conditions, treatment options, and crisis resources.",
+    url: "https://magazine.medlineplus.gov/topic/mental-health",
+    source: "NIH MedlinePlus",
+  },
+  {
+    title: "Building Emotional Resilience",
+    description: "Strategies for developing mental resilience and bouncing back from life's challenges.",
+    url: "https://www.apa.org/topics/resilience",
     source: "American Psychological Association",
   },
   {
-    title: "The Science of Mindfulness and Mental Health",
-    description: "Explore how mindfulness practices can improve mental well-being and reduce stress.",
-    url: "#",
-    source: "Harvard Medical School",
-  },
-  {
-    title: "Building Resilience in Difficult Times",
-    description: "Strategies for developing mental resilience and bouncing back from challenges.",
-    url: "#",
-    source: "Psychology Today",
-  },
-  {
-    title: "Sleep and Mental Health: The Connection",
-    description: "Understanding the vital relationship between quality sleep and emotional well-being.",
-    url: "#",
-    source: "National Sleep Foundation",
-  },
-  {
-    title: "Recognizing Signs of Burnout",
-    description: "Identify early warning signs of burnout and learn prevention strategies.",
-    url: "#",
+    title: "Mental Health and Wellness",
+    description: "Explore mental health conditions, coping strategies, and paths to emotional well-being.",
+    url: "https://www.mayoclinic.org/diseases-conditions/mental-illness/symptoms-causes/syc-20374968",
     source: "Mayo Clinic",
   },
 ];
@@ -48,75 +48,87 @@ const books = [
     author: "Edmund J. Bourne",
     description: "A comprehensive guide to understanding and overcoming anxiety disorders through practical exercises.",
     year: "2020",
+    url: "https://www.amazon.com/Anxiety-Phobia-Workbook-Edmund-Bourne/dp/1684034833",
   },
   {
     title: "Feeling Good: The New Mood Therapy",
     author: "David D. Burns",
     description: "Learn cognitive behavioral techniques to overcome depression and develop a positive outlook.",
     year: "1999",
+    url: "https://www.amazon.com/Feeling-Good-New-Mood-Therapy/dp/0380810336",
   },
   {
     title: "The Body Keeps the Score",
     author: "Bessel van der Kolk",
     description: "Understanding how trauma affects the body and mind, with pathways to recovery.",
     year: "2014",
+    url: "https://www.amazon.com/Body-Keeps-Score-Healing-Trauma/dp/0143127748",
   },
   {
     title: "Mindfulness for Beginners",
     author: "Jon Kabat-Zinn",
     description: "An introduction to mindfulness meditation and its benefits for mental health.",
     year: "2016",
+    url: "https://www.amazon.com/Mindfulness-Beginners-Reclaiming-Present-Moment/dp/1622036670",
   },
   {
     title: "Lost Connections",
     author: "Johann Hari",
     description: "Exploring the real causes of depression and anxiety and unexpected solutions.",
     year: "2018",
+    url: "https://www.amazon.com/Lost-Connections-Uncovering-Depression-Unexpected/dp/1632868318",
   },
   {
     title: "The Gifts of Imperfection",
     author: "Brené Brown",
     description: "Let go of who you think you're supposed to be and embrace who you are.",
     year: "2010",
+    url: "https://www.amazon.com/Gifts-Imperfection-Think-Supposed-Embrace/dp/159285849X",
   },
 ];
 
 const videos = [
   {
-    title: "Understanding Mental Health",
-    description: "A comprehensive overview of mental health, common disorders, and when to seek help.",
-    duration: "12:45",
-    platform: "TED-Ed",
-  },
-  {
-    title: "Meditation for Anxiety and Stress",
-    description: "Guided meditation practice specifically designed to reduce anxiety and calm the mind.",
-    duration: "20:00",
-    platform: "Headspace",
-  },
-  {
     title: "The Power of Vulnerability",
     description: "Brené Brown discusses the importance of vulnerability in human connection and mental health.",
     duration: "20:19",
     platform: "TED Talk",
+    url: "https://www.youtube.com/watch?v=iCvmsMzlF7o",
   },
   {
-    title: "Cognitive Behavioral Therapy Explained",
-    description: "Learn the basics of CBT and how it helps treat depression and anxiety.",
-    duration: "15:30",
-    platform: "Psych Hub",
+    title: "Guided Meditation Videos",
+    description: "Collection of guided meditations for anxiety, stress, sleep, and mindfulness practice.",
+    duration: "Various",
+    platform: "Headspace",
+    url: "https://www.youtube.com/@headspace",
   },
   {
-    title: "Building Better Mental Health",
-    description: "Practical strategies for improving mental health and emotional well-being daily.",
-    duration: "18:22",
-    platform: "HealthyGamerGG",
-  },
-  {
-    title: "Understanding Panic Attacks",
-    description: "What happens during a panic attack and how to manage symptoms effectively.",
-    duration: "10:15",
+    title: "How to Deal with Anxiety",
+    description: "Practical strategies and techniques for managing anxiety in everyday life.",
+    duration: "8:44",
     platform: "Therapy in a Nutshell",
+    url: "https://www.youtube.com/watch?v=WWloIAQpMcQ",
+  },
+  {
+    title: "Understanding Depression",
+    description: "What depression is, how it affects the brain, and evidence-based treatment approaches.",
+    duration: "5:32",
+    platform: "TED-Ed",
+    url: "https://www.youtube.com/watch?v=z-IR48Mb3W0",
+  },
+  {
+    title: "Mental Health for All by Involving All",
+    description: "Dr. Vikram Patel's TEDx talk on making mental health care accessible to everyone.",
+    duration: "17:43",
+    platform: "TEDx",
+    url: "https://www.youtube.com/watch?v=yzm4gpAKrBk",
+  },
+  {
+    title: "The Skills for Healthy Romantic Relationships",
+    description: "Understanding attachment styles and building healthy relationship patterns.",
+    duration: "13:50",
+    platform: "The School of Life",
+    url: "https://www.youtube.com/watch?v=NhyfBi-Ad4c",
   },
 ];
 
@@ -167,6 +179,7 @@ export default function Resources() {
                     <Button 
                       variant="ghost" 
                       size="sm"
+                      onClick={() => window.open(article.url, '_blank')}
                       data-testid={`button-article-${index}`}
                     >
                       Read More
@@ -200,6 +213,7 @@ export default function Resources() {
                     variant="outline" 
                     size="sm"
                     className="w-full"
+                    onClick={() => window.open(book.url, '_blank')}
                     data-testid={`button-book-${index}`}
                   >
                     Find this Book
@@ -230,6 +244,7 @@ export default function Resources() {
                   <Button 
                     variant="ghost" 
                     size="sm"
+                    onClick={() => window.open(video.url, '_blank')}
                     data-testid={`button-video-${index}`}
                   >
                     Watch Video
