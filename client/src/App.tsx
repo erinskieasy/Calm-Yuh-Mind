@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { PersistentAudioPlayer } from "@/components/persistent-audio-player";
 import Landing from "@/pages/landing";
@@ -99,9 +100,16 @@ function AuthenticatedApp({ style }: { style: Record<string, string> }) {
             <SidebarTrigger data-testid="button-sidebar-toggle" />
             <div className="flex items-center gap-4">
               {user && (user as any).email && (
-                <span className="text-sm text-muted-foreground" data-testid="text-user-email">
-                  {(user as any).email}
-                </span>
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-8 w-8" data-testid="avatar-user">
+                    <AvatarFallback className="text-lg">
+                      {(user as any).profileImageUrl || "👤"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm text-muted-foreground" data-testid="text-user-email">
+                    {(user as any).email}
+                  </span>
+                </div>
               )}
               <ThemeToggle />
               <Button 
