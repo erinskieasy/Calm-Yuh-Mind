@@ -17,7 +17,12 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
 - **Color Palette**: Calming Sage Green, Soft Sky Blue (light mode background), Deep Navy (dark mode background), with accent blues and greens.
 - **Typography**: Outfit for headings, Inter for body text, with a responsive font scale.
 - **Spacing**: Generous and consistent spacing (e.g., `p-4`, `gap-4`) for reduced cognitive load.
-- **Theme**: Light and dark mode toggle with persistent preference, smooth transitions.
+- **Theme System**: Four custom gradient themes with full CSS variable definitions:
+  - **Default**: Original calming sage and sky blue palette
+  - **Midnight Breeze**: Light blue to deep midnight gradient for tranquility and reflection
+  - **Tropical Sunset**: Warm sunset oranges and reds for energy and optimism
+  - **Meadow Fields**: Fresh meadow greens for growth and renewal
+  - Themes persist via localStorage and apply site-wide with smooth transitions
 
 ### Technical Implementations
 - **Frontend**: React 18 with TypeScript, Wouter for routing, TanStack Query v5 for server state, Recharts for visualizations, Framer Motion for animations, Tiptap rich text editor.
@@ -34,6 +39,7 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
 - **Digital Journal**: Rich HTML editor powered by Tiptap with full formatting capabilities (bold, italic, underline, headings, lists, alignment), image upload support (10MB limit, JPEG/PNG/GIF/WebP), and chronological timeline display.
 - **Meditation & Breathing**: Guided exercises with interactive timers and session tracking.
 - **Soothing Sounds**: 5 ambient soundscapes (Ocean Waves, Rainfall, Wind Chimes, Crackling Fire, White Noise) plus custom MP3 upload feature with volume control, persistent player, and continuous playback across all pages via global audio context. User-isolated storage with 50MB file limit.
+- **Settings**: User preferences page with custom gradient theme selection. Four themes available (Default, Midnight Breeze, Tropical Sunset, Meadow Fields) with visual gradient previews and color samples. Theme selection persists across sessions via localStorage and transforms entire app appearance including backgrounds, accents, cards, sidebar, and all UI elements.
 - **Self-Assessment Tools**: 
   - **Depression**: PHQ-9 (9 questions, 5-level severity)
   - **Anxiety**: GAD-7 (7 questions, 4-level severity)
