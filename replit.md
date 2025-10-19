@@ -13,7 +13,15 @@ Serenity is a comprehensive mental health and wellness platform designed to supp
   - Those looking for AI-powered mental health support and resources
 - **Future Expansion**: Potential for therapist portals, support groups, and professional connections
 
-## Current Features (MVP)
+## Current Features
+
+### Authentication & User Management
+- **Multi-Provider Authentication**: Replit Auth integration supporting Google, GitHub, X (Twitter), Apple, and email/password
+- **Session Management**: Secure session-based authentication with PostgreSQL persistence
+- **User Data Isolation**: All data (moods, journals, assessments, chat history, meditation sessions) scoped to authenticated users
+- **Landing Page**: Public landing page for unauthenticated users with feature showcase
+- **Protected Routes**: All application features require authentication
+- **User Profiles**: Support for client and therapist roles (foundation for future therapist portal)
 
 ### 1. Dashboard
 - Real-time statistics overview (mood entries, journal count, meditation time)
@@ -83,9 +91,12 @@ Serenity is a comprehensive mental health and wellness platform designed to supp
 
 ### Backend Stack
 - **Server**: Express.js
-- **Data Storage**: In-memory storage (MemStorage)
-- **AI Integration**: OpenAI API via Replit AI Integrations
+- **Database**: PostgreSQL (Neon) with Drizzle ORM
+- **Authentication**: Replit Auth with session-based authentication
+- **Data Storage**: PostgreSQL with user-scoped data isolation
+- **AI Integration**: OpenAI API (GPT-4o-mini) via Replit AI Integrations
 - **Validation**: Zod schemas with Drizzle-Zod
+- **Session Store**: PostgreSQL session persistence
 
 ### Design System
 
@@ -107,77 +118,101 @@ Serenity is a comprehensive mental health and wellness platform designed to supp
 
 ### API Routes
 
+**Authentication Routes:**
 ```
-GET  /api/moods                  - Fetch all mood entries
+GET  /api/auth/user              - Get authenticated user (returns 401 if not authenticated)
+GET  /api/logout                 - Logout current user
+GET  /login                      - Replit Auth login page (redirects to OAuth providers)
+```
+
+**Protected Data Routes** (all require authentication):
+```
+GET  /api/moods                  - Fetch user's mood entries
 POST /api/moods                  - Create mood entry
-GET  /api/journals               - Fetch all journal entries
+GET  /api/journals               - Fetch user's journal entries
 POST /api/journals               - Create journal entry
-DELETE /api/journals/:id         - Delete journal entry
-GET  /api/meditation-sessions    - Fetch meditation sessions
+DELETE /api/journals/:id         - Delete journal entry (user owns it)
+GET  /api/meditation-sessions    - Fetch user's meditation sessions
 POST /api/meditation-sessions    - Create session record
-GET  /api/chat                   - Fetch chat history
+GET  /api/chat                   - Fetch user's chat history
 POST /api/chat                   - Send message, get AI response
-GET  /api/assessments            - Fetch assessment results
+GET  /api/assessments            - Fetch user's assessment results
 POST /api/assessments            - Save assessment result
 ```
 
 ## Data Models
 
+### User
+```typescript
+{
+  id: serial (auto-increment primary key)
+  email: string (unique, from auth provider)
+  name: string | null
+  role: string ('client' | 'therapist')
+  createdAt: timestamp
+}
+```
+
 ### MoodEntry
 ```typescript
 {
-  id: string
+  id: serial (auto-increment primary key)
+  userId: integer (foreign key to users)
   date: string (YYYY-MM-DD)
   mood: string (joyful|calm|neutral|anxious|sad)
   intensity: number (1-5)
   note: string | null
-  createdAt: Date
+  createdAt: timestamp
 }
 ```
 
 ### JournalEntry
 ```typescript
 {
-  id: string
+  id: serial (auto-increment primary key)
+  userId: integer (foreign key to users)
   title: string
   content: string
   mood: string | null
   date: string
-  createdAt: Date
+  createdAt: timestamp
 }
 ```
 
 ### MeditationSession
 ```typescript
 {
-  id: string
+  id: serial (auto-increment primary key)
+  userId: integer (foreign key to users)
   type: string (exercise ID)
   duration: number (minutes)
   completed: number (minutes)
   date: string
-  createdAt: Date
+  createdAt: timestamp
 }
 ```
 
 ### ChatMessage
 ```typescript
 {
-  id: string
+  id: serial (auto-increment primary key)
+  userId: integer (foreign key to users)
   role: 'user' | 'assistant'
   content: string
-  createdAt: Date
+  createdAt: timestamp
 }
 ```
 
 ### AssessmentResult
 ```typescript
 {
-  id: string
+  id: serial (auto-increment primary key)
+  userId: integer (foreign key to users)
   type: string (phq-9|gad-7)
   score: number
   answers: string (JSON array)
   date: string
-  createdAt: Date
+  createdAt: timestamp
 }
 ```
 
@@ -268,12 +303,21 @@ npm run dev  # Starts Express + Vite dev servers on port 5000
 
 ## Recent Changes
 
-**October 19, 2025**
-- Initial MVP implementation completed
-- All 7 core features implemented and tested
-- Design system fully configured with calming color palette
-- OpenAI integration set up via Replit AI Integrations
-- Comprehensive E2E testing completed successfully
+**October 19, 2025 - Authentication & Database Migration**
+- Migrated from in-memory storage to PostgreSQL database
+- Implemented Replit Auth with multi-provider support (Google, GitHub, X, Apple, email/password)
+- Added user-scoped data architecture with userId foreign keys across all entities
+- Created landing page for unauthenticated users
+- Updated all API routes to require authentication and filter by userId
+- Fixed auth hook to properly handle 401 responses (return null instead of throwing)
+- Session persistence in PostgreSQL
+- All features now support multiple users with data isolation
+- E2E testing confirmed landing page and authentication flow working
+
+**October 19, 2025 - Initial MVP**
+- All 7 core features implemented (mood tracking, journaling, meditation, AI chat, assessments, sounds, theme)
+- Design system configured with calming color palette
+- OpenAI integration via Replit AI Integrations
 - TypeScript type safety enforced throughout
 
 ## Future Enhancements (Post-MVP)
@@ -311,8 +355,9 @@ npm run dev  # Starts Express + Vite dev servers on port 5000
 
 ## Important Notes
 
-- **Data Persistence**: Currently using in-memory storage (data resets on server restart)
-- **Production Deployment**: Consider migrating to PostgreSQL for persistent storage
+- **Data Persistence**: Using PostgreSQL database (Neon) - data persists across restarts
+- **Authentication**: Session-based authentication with Replit Auth - supports multiple OAuth providers
+- **User Data Isolation**: All user data is scoped by userId - users only see their own data
 - **AI Costs**: OpenAI API calls are billed to Replit credits
 - **Privacy**: All data stays within the application; no external analytics
 - **Medical Disclaimer**: This is a wellness tool, not a replacement for professional mental health care
