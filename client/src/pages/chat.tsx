@@ -273,22 +273,57 @@ export default function Chat() {
     setIsPlaying(false);
   };
 
-  const sendVoiceNote = () => {
-    if (!transcribedText.trim()) {
+  const sendVoiceNote = async () => {
+    if (!audioBlob) {
       toast({
-        title: "No voice detected",
-        description: "Could not transcribe your voice. Please try again.",
+        title: "No audio recorded",
+        description: "Please record a voice note first.",
         variant: "destructive",
       });
       return;
     }
 
-    // Send the transcribed text to AI
-    sendMessage.mutate(transcribedText.trim());
-    
-    // Clean up after sending
-    deleteRecording();
-    setTranscribedText('');
+    try {
+      // Create FormData and append audio file
+      const formData = new FormData();
+      formData.append("audio", audioBlob, "voice-note.webm");
+
+      // Upload and process voice note
+      const response = await fetch("/api/chat/voice-note", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to upload voice note");
+      }
+
+      const data = await response.json();
+
+      // Invalidate chat messages to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["/api/chat"] });
+
+      // Auto-speak AI response if enabled
+      if (autoSpeak && data?.assistant?.content) {
+        speakText(data.assistant.content);
+      }
+
+      // Clean up after sending
+      deleteRecording();
+      setTranscribedText('');
+
+      toast({
+        title: "Voice note sent",
+        description: "Your voice message has been processed.",
+      });
+    } catch (error) {
+      console.error("Error sending voice note:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send voice note. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleVoiceInput = () => {
@@ -384,6 +419,20 @@ export default function Chat() {
                       : "bg-muted text-foreground"
                   }`}
                 >
+                  {message.audioUrl && (
+                    <div className="mb-3 p-2 rounded-lg bg-black/10 dark:bg-white/10">
+                      <div className="flex items-center gap-2">
+                        <Mic className="h-4 w-4" />
+                        <span className="text-xs font-medium">Voice Note</span>
+                      </div>
+                      <audio
+                        controls
+                        src={message.audioUrl}
+                        className="w-full mt-2"
+                        data-testid={`audio-player-${message.id}`}
+                      />
+                    </div>
+                  )}
                   <p className="leading-relaxed whitespace-pre-wrap">
                     {message.content}
                   </p>
