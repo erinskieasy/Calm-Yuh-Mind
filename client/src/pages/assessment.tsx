@@ -220,12 +220,21 @@ export default function Assessment() {
     const currentOriginalIndex = shuffledQuestions[currentQuestion].originalIndex;
     const newAnswers = { ...answers, [currentOriginalIndex]: value };
     setAnswers(newAnswers);
+  };
+
+  const handleNext = () => {
+    const currentOriginalIndex = shuffledQuestions[currentQuestion].originalIndex;
+    
+    // Check if current question is answered
+    if (answers[currentOriginalIndex] === undefined) {
+      return; // Don't advance if no answer selected
+    }
 
     if (currentQuestion < totalQuestions - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
       // Calculate score using original question indices
-      const answersArray = assessment!.questions.map((_, idx) => newAnswers[idx] || 0);
+      const answersArray = assessment!.questions.map((_, idx) => answers[idx] || 0);
       
       // Handle reverse scoring for PSS and Rosenberg
       let score = 0;
@@ -539,6 +548,16 @@ export default function Assessment() {
                   ))}
                 </div>
               </RadioGroup>
+
+              <div className="flex justify-end pt-4">
+                <Button
+                  onClick={handleNext}
+                  disabled={answers[shuffledQuestions[currentQuestion]?.originalIndex] === undefined}
+                  data-testid="button-next-question"
+                >
+                  {currentQuestion === totalQuestions - 1 ? "See Results" : "Next Question"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
