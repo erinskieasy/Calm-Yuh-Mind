@@ -89,7 +89,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-6">
         <h1 className="text-2xl font-display font-semibold text-foreground">
-          Serenity
+          CalmYuhMind
         </h1>
         <p className="text-sm text-muted-foreground">Your wellness companion</p>
       </SidebarHeader>

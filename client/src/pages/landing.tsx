@@ -10,7 +10,7 @@ export default function Landing() {
           {/* Hero Section */}
           <div className="text-center space-y-6">
             <h1 className="font-display text-5xl md:text-6xl font-bold text-foreground">
-              Serenity
+              CalmYuhMind
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
               Your personal companion for mental health and wellness

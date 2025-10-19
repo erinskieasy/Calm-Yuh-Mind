@@ -1,7 +1,7 @@
-# Serenity - Mental Health & Wellness Platform
+# CalmYuhMind - Mental Health & Wellness Platform
 
 ## Overview
-Serenity is a comprehensive mental health and wellness platform designed to support individuals in managing their mental well-being. It provides tools for mood tracking, journaling, meditation, AI-powered support, self-assessment, soothing ambient sounds, and a nearby therapist directory with location-based search. The primary goal is to offer an accessible, calming digital space for self-care and professional connection, targeting individuals managing their mental health, seeking wellness practices, and those looking for AI support or mental health professionals.
+CalmYuhMind is a comprehensive mental health and wellness platform designed to support individuals in managing their mental well-being. It provides tools for mood tracking, journaling, meditation, AI-powered support, self-assessment, soothing ambient sounds, and a nearby therapist directory with location-based search. The primary goal is to offer an accessible, calming digital space for self-care and professional connection, targeting individuals managing their mental health, seeking wellness practices, and those looking for AI support or mental health professionals.
 
 ## User Preferences
 - **Visual Design**: Calming, minimalist aesthetic with soft colors
