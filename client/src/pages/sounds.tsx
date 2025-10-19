@@ -5,6 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { Play, Pause, Volume2 } from "lucide-react";
 import oceanSoundsAudio from "@assets/Ocean Sounds_1760846545743.mp3";
 import windChimesAudio from "@assets/Wind Chimes_1760847358473.mp3";
+import fireplaceAudio from "@assets/Crackling Sounds_1760848106418.mp3";
 
 const tracks = [
   {
@@ -38,6 +39,7 @@ const tracks = [
     name: "Crackling Fire",
     description: "Warm fireplace sounds",
     color: "hsl(25, 75%, 65%)",
+    audioSrc: fireplaceAudio,
   },
   {
     id: "white-noise",
