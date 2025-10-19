@@ -208,7 +208,7 @@ export default function Assessment() {
 
   const assessment = assessments.find((a) => a.id === selectedAssessment);
   const totalQuestions = shuffledQuestions.length || 0;
-  const progress = totalQuestions > 0 ? ((currentQuestion + 1) / totalQuestions) * 100 : 0;
+  const progress = totalQuestions > 0 ? (Object.keys(answers).length / totalQuestions) * 100 : 0;
 
   useEffect(() => {
     if (selectedAssessment && assessment) {
