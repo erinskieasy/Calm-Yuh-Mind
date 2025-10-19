@@ -13,12 +13,51 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 
 const moods = [
-  { name: "joyful", icon: Laugh, color: "hsl(45, 85%, 70%)", label: "Joyful" },
-  { name: "calm", icon: Smile, color: "hsl(200, 60%, 75%)", label: "Calm" },
-  { name: "neutral", icon: Meh, color: "hsl(210, 35%, 60%)", label: "Neutral" },
-  { name: "anxious", icon: Frown, color: "hsl(280, 40%, 70%)", label: "Anxious" },
-  { name: "sad", icon: Angry, color: "hsl(210, 35%, 60%)", label: "Sad" },
+  { name: "joyful", icon: Laugh, color: "hsl(45, 85%, 70%)", label: "Joyful", value: 5 },
+  { name: "calm", icon: Smile, color: "hsl(200, 60%, 75%)", label: "Calm", value: 4 },
+  { name: "neutral", icon: Meh, color: "hsl(210, 35%, 60%)", label: "Neutral", value: 3 },
+  { name: "anxious", icon: Frown, color: "hsl(280, 40%, 70%)", label: "Anxious", value: 2 },
+  { name: "sad", icon: Angry, color: "hsl(210, 35%, 60%)", label: "Sad", value: 1 },
 ];
+
+// Helper function to calculate average mood for a day
+const calculateAverageMood = (entries: MoodEntry[]) => {
+  if (entries.length === 0) return null;
+  if (entries.length === 1) return entries[0];
+  
+  // Calculate weighted average: (mood value * intensity) for each entry
+  let totalWeightedValue = 0;
+  let totalWeight = 0;
+  
+  entries.forEach(entry => {
+    const moodConfig = moods.find(m => m.name === entry.mood);
+    if (moodConfig) {
+      const weight = entry.intensity;
+      totalWeightedValue += moodConfig.value * weight;
+      totalWeight += weight;
+    }
+  });
+  
+  const avgValue = totalWeightedValue / totalWeight;
+  
+  // Find the closest mood to the average value
+  const closestMood = moods.reduce((prev, curr) => {
+    return Math.abs(curr.value - avgValue) < Math.abs(prev.value - avgValue) ? curr : prev;
+  });
+  
+  // Calculate average intensity
+  const avgIntensity = Math.round(
+    entries.reduce((sum, e) => sum + e.intensity, 0) / entries.length
+  );
+  
+  // Return a synthetic entry representing the average
+  return {
+    ...entries[0], // Use first entry as template
+    mood: closestMood.name,
+    intensity: avgIntensity,
+    note: `${entries.length} mood entries today`,
+  };
+};
 
 interface BubbleProps {
   Icon: LucideIcon;
@@ -88,6 +127,28 @@ export default function MoodTracker() {
       return response.json();
     },
   });
+
+  // Group moods by date for daily averaging
+  const moodsByDate = useMemo(() => {
+    const grouped = new Map<string, MoodEntry[]>();
+    moodEntries.forEach(entry => {
+      const existing = grouped.get(entry.date) || [];
+      grouped.set(entry.date, [...existing, entry]);
+    });
+    return grouped;
+  }, [moodEntries]);
+
+  // Calculate daily average moods
+  const dailyAverageMoods = useMemo(() => {
+    const averages = new Map<string, MoodEntry>();
+    moodsByDate.forEach((entries, date) => {
+      const avg = calculateAverageMood(entries);
+      if (avg) {
+        averages.set(date, avg);
+      }
+    });
+    return averages;
+  }, [moodsByDate]);
 
   const createMood = useMutation({
     mutationFn: async (data: InsertMoodEntry) => {
@@ -184,15 +245,20 @@ export default function MoodTracker() {
     setIsDialogOpen(true);
   };
 
-  const selectedDateMood = useMemo(() => {
-    if (!selectedDate) return null;
-    return moodEntries.find((m) => m.date === selectedDate);
-  }, [selectedDate, moodEntries]);
+  const selectedDateMoods = useMemo(() => {
+    if (!selectedDate) return [];
+    return moodsByDate.get(selectedDate) || [];
+  }, [selectedDate, moodsByDate]);
 
-  const selectedDateMoodConfig = useMemo(() => {
-    if (!selectedDateMood) return null;
-    return moods.find((m) => m.name === selectedDateMood.mood);
-  }, [selectedDateMood]);
+  const selectedDateAverage = useMemo(() => {
+    if (!selectedDate) return null;
+    return dailyAverageMoods.get(selectedDate) || null;
+  }, [selectedDate, dailyAverageMoods]);
+
+  const selectedDateAverageConfig = useMemo(() => {
+    if (!selectedDateAverage) return null;
+    return moods.find((m) => m.name === selectedDateAverage.mood);
+  }, [selectedDateAverage]);
 
   return (
     <div className="space-y-8">
@@ -380,9 +446,10 @@ export default function MoodTracker() {
           ) : (
             <div className="grid grid-cols-7 gap-2">
               {daysInSelectedMonth.map((date) => {
-                const dayMood = moodEntries.find((m) => m.date === date);
-                const moodConfig = moods.find((m) => m.name === dayMood?.mood);
-                const dayOfWeek = new Date(date).getDay();
+                const dayAverage = dailyAverageMoods.get(date);
+                const moodConfig = dayAverage ? moods.find((m) => m.name === dayAverage.mood) : null;
+                const dayEntries = moodsByDate.get(date) || [];
+                const entriesCount = dayEntries.length;
                 
                 return (
                   <button
@@ -390,19 +457,24 @@ export default function MoodTracker() {
                     onClick={() => handleDateClick(date)}
                     className="aspect-square rounded-lg flex flex-col items-center justify-center text-xs gap-0.5 hover-elevate active-elevate-2 transition-all cursor-pointer"
                     style={{
-                      backgroundColor: dayMood
+                      backgroundColor: dayAverage
                         ? `${moodConfig?.color}40`
                         : "hsl(var(--muted))",
                     }}
-                    title={`${date}${dayMood ? ` - ${moodConfig?.label} (${dayMood.intensity}/5)` : " - Click to view"}`}
+                    title={`${date}${dayAverage ? ` - ${moodConfig?.label} (${dayAverage.intensity}/5)${entriesCount > 1 ? ` - ${entriesCount} entries` : ''}` : " - Click to view"}`}
                     data-testid={`calendar-day-${date}`}
                   >
                     <span className="font-medium">{new Date(date).getDate()}</span>
-                    {dayMood && moodConfig && (
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: moodConfig.color }}
-                      />
+                    {dayAverage && moodConfig && (
+                      <div className="flex items-center gap-0.5">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: moodConfig.color }}
+                        />
+                        {entriesCount > 1 && (
+                          <span className="text-[10px] font-semibold">{entriesCount}</span>
+                        )}
+                      </div>
                     )}
                   </button>
                 );
@@ -435,39 +507,70 @@ export default function MoodTracker() {
           </DialogHeader>
           
           <div className="space-y-4">
-            {selectedDateMood && selectedDateMoodConfig ? (
+            {selectedDateMoods.length > 0 ? (
               <>
-                <div className="flex items-center gap-4 p-4 rounded-lg" style={{ backgroundColor: `${selectedDateMoodConfig.color}20` }}>
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: selectedDateMoodConfig.color }}
-                  >
-                    {(() => {
-                      const Icon = selectedDateMoodConfig.icon;
-                      return <Icon className="w-8 h-8 text-white" />;
-                    })()}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold capitalize">{selectedDateMoodConfig.label}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Intensity: {selectedDateMood.intensity}/5
-                    </p>
-                  </div>
-                </div>
-
-                {selectedDateMood.note && (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium">Note:</h4>
-                    <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                      {selectedDateMood.note}
-                    </p>
+                {/* Show average if multiple entries */}
+                {selectedDateMoods.length > 1 && selectedDateAverage && selectedDateAverageConfig && (
+                  <div className="p-4 rounded-lg border-2 border-primary/30" style={{ backgroundColor: `${selectedDateAverageConfig.color}10` }}>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">DAILY AVERAGE</p>
+                    <div className="flex items-center gap-4">
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: selectedDateAverageConfig.color }}
+                      >
+                        {(() => {
+                          const Icon = selectedDateAverageConfig.icon;
+                          return <Icon className="w-6 h-6 text-white" />;
+                        })()}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold capitalize">{selectedDateAverageConfig.label}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Average Intensity: {selectedDateAverage.intensity}/5 · {selectedDateMoods.length} entries
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
 
-                <div className="text-xs text-muted-foreground">
-                  Logged at {new Date(selectedDateMood.createdAt).toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
+                {/* Show all entries */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium">
+                    {selectedDateMoods.length > 1 ? 'All Entries' : 'Mood Entry'}
+                  </h4>
+                  {selectedDateMoods.map((entry, index) => {
+                    const config = moods.find(m => m.name === entry.mood);
+                    if (!config) return null;
+                    
+                    return (
+                      <div key={entry.id} className="p-3 rounded-lg" style={{ backgroundColor: `${config.color}15` }}>
+                        <div className="flex items-center gap-3 mb-2">
+                          <div
+                            className="w-10 h-10 rounded-full flex items-center justify-center"
+                            style={{ backgroundColor: config.color }}
+                          >
+                            {(() => {
+                              const Icon = config.icon;
+                              return <Icon className="w-5 h-5 text-white" />;
+                            })()}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold capitalize">{config.label}</h3>
+                            <p className="text-xs text-muted-foreground">
+                              Intensity: {entry.intensity}/5 · {new Date(entry.createdAt).toLocaleTimeString('en-US', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                        {entry.note && (
+                          <p className="text-sm text-muted-foreground bg-background/50 p-2 rounded">
+                            {entry.note}
+                          </p>
+                        )}
+                      </div>
+                    );
                   })}
                 </div>
               </>
