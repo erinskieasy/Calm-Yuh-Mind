@@ -117,6 +117,15 @@ export const consultationRequests = pgTable("consultation_requests", {
   respondedAt: timestamp("responded_at"),
 });
 
+// Custom user-uploaded sounds
+export const customSounds = pgTable("custom_sounds", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  filePath: text("file_path").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   moodEntries: many(moodEntries),
@@ -127,6 +136,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   therapistProfile: one(therapistProfiles),
   sentConsultationRequests: many(consultationRequests, { relationName: "clientRequests" }),
   receivedConsultationRequests: many(consultationRequests, { relationName: "therapistRequests" }),
+  customSounds: many(customSounds),
 }));
 
 export const moodEntriesRelations = relations(moodEntries, ({ one }) => ({
@@ -181,6 +191,13 @@ export const consultationRequestsRelations = relations(consultationRequests, ({ 
     fields: [consultationRequests.therapistId],
     references: [users.id],
     relationName: "therapistRequests",
+  }),
+}));
+
+export const customSoundsRelations = relations(customSounds, ({ one }) => ({
+  user: one(users, {
+    fields: [customSounds.userId],
+    references: [users.id],
   }),
 }));
 
@@ -240,6 +257,12 @@ export const insertConsultationRequestSchema = createInsertSchema(consultationRe
   respondedAt: true,
 });
 
+export const insertCustomSoundSchema = createInsertSchema(customSounds).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+});
+
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
 
@@ -264,3 +287,6 @@ export type TherapistProfile = typeof therapistProfiles.$inferSelect;
 
 export type InsertConsultationRequest = z.infer<typeof insertConsultationRequestSchema>;
 export type ConsultationRequest = typeof consultationRequests.$inferSelect;
+
+export type InsertCustomSound = z.infer<typeof insertCustomSoundSchema>;
+export type CustomSound = typeof customSounds.$inferSelect;
