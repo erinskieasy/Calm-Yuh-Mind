@@ -17,10 +17,8 @@ export default function Chat() {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [transcribedText, setTranscribedText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
-  const recordingRecognitionRef = useRef<any>(null);
   const speechSynthesisRef = useRef<SpeechSynthesis | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -165,46 +163,6 @@ export default function Chat() {
 
   const startRecording = async () => {
     try {
-      // Initialize speech recognition for transcription
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      
-      if (!SpeechRecognition) {
-        toast({
-          title: "Voice recognition not supported",
-          description: "Your browser doesn't support voice recognition. Try Chrome or Edge.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const recordingRecognition = new SpeechRecognition();
-      recordingRecognition.continuous = true;
-      recordingRecognition.interimResults = true;
-      recordingRecognition.lang = 'en-US';
-
-      let finalTranscript = '';
-
-      recordingRecognition.onresult = (event: any) => {
-        let interimTranscript = '';
-        
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-          } else {
-            interimTranscript += transcript;
-          }
-        }
-        
-        setTranscribedText(finalTranscript + interimTranscript);
-      };
-
-      recordingRecognition.onerror = (event: any) => {
-        console.error('Recording recognition error:', event.error);
-      };
-
-      recordingRecognitionRef.current = recordingRecognition;
-
       // Start audio recording
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -225,11 +183,8 @@ export default function Chat() {
         stream.getTracks().forEach(track => track.stop());
       };
 
-      // Start both recording and transcription
       mediaRecorder.start();
-      recordingRecognition.start();
       setIsRecording(true);
-      setTranscribedText('');
     } catch (error) {
       console.error('Failed to start recording:', error);
       toast({
@@ -244,9 +199,6 @@ export default function Chat() {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-    }
-    if (recordingRecognitionRef.current) {
-      recordingRecognitionRef.current.stop();
     }
   };
 
@@ -303,18 +255,12 @@ export default function Chat() {
       // Invalidate chat messages to refresh the list
       queryClient.invalidateQueries({ queryKey: ["/api/chat"] });
 
-      // Auto-speak AI response if enabled
-      if (autoSpeak && data?.assistant?.content) {
-        speakText(data.assistant.content);
-      }
-
       // Clean up after sending
       deleteRecording();
-      setTranscribedText('');
 
       toast({
         title: "Voice note sent",
-        description: "Your voice message has been processed.",
+        description: "Your voice message has been sent.",
       });
     } catch (error) {
       console.error("Error sending voice note:", error);
@@ -487,12 +433,6 @@ export default function Chat() {
           {audioUrl && !isRecording && (
             <Card className="p-3" data-testid="voice-note-player">
               <div className="space-y-3">
-                {transcribedText && (
-                  <div className="p-3 bg-muted rounded-lg">
-                    <p className="text-xs text-muted-foreground mb-1">Transcribed text:</p>
-                    <p className="text-sm">{transcribedText}</p>
-                  </div>
-                )}
                 <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
@@ -505,14 +445,14 @@ export default function Chat() {
                   <div className="flex-1">
                     <p className="text-sm font-medium">Your voice note</p>
                     <p className="text-xs text-muted-foreground">
-                      {isPlaying ? "Playing..." : transcribedText ? "Ready to send" : "Transcribing..."}
+                      {isPlaying ? "Playing..." : "Ready to send"}
                     </p>
                   </div>
                   <Button
                     variant="default"
                     size="sm"
                     onClick={sendVoiceNote}
-                    disabled={sendMessage.isPending || !transcribedText.trim()}
+                    disabled={sendMessage.isPending}
                     data-testid="button-send-voice-note"
                   >
                     <Send className="h-4 w-4 mr-1" />
