@@ -1,96 +1,11 @@
-import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Play, Pause, Volume2 } from "lucide-react";
-import oceanSoundsAudio from "@assets/Ocean Sounds_1760846545743.mp3";
-import windChimesAudio from "@assets/Wind Chimes_1760847358473.mp3";
-import fireplaceAudio from "@assets/Crackling Sounds_1760848106418.mp3";
-import rainAudio from "@assets/Rain Sounds_1760848622709.mp3";
-import whiteNoiseAudio from "@assets/White Noise_1760849619231.mp3";
-
-const tracks = [
-  {
-    id: "ocean-waves",
-    name: "Ocean Waves",
-    description: "Gentle waves lapping on the shore",
-    color: "hsl(200, 60%, 75%)",
-    audioSrc: oceanSoundsAudio,
-  },
-  {
-    id: "rain",
-    name: "Rainfall",
-    description: "Soft rain on leaves",
-    color: "hsl(210, 35%, 60%)",
-    audioSrc: rainAudio,
-  },
-  {
-    id: "forest",
-    name: "Forest Ambience",
-    description: "Birds chirping in the woods",
-    color: "hsl(160, 45%, 65%)",
-  },
-  {
-    id: "wind-chimes",
-    name: "Wind Chimes",
-    description: "Peaceful chimes in the breeze",
-    color: "hsl(280, 40%, 70%)",
-    audioSrc: windChimesAudio,
-  },
-  {
-    id: "fireplace",
-    name: "Crackling Fire",
-    description: "Warm fireplace sounds",
-    color: "hsl(25, 75%, 65%)",
-    audioSrc: fireplaceAudio,
-  },
-  {
-    id: "white-noise",
-    name: "White Noise",
-    description: "Steady background hum",
-    color: "hsl(220, 10%, 50%)",
-    audioSrc: whiteNoiseAudio,
-  },
-];
+import { useAudio, tracks } from "@/contexts/AudioContext";
 
 export default function Sounds() {
-  const [playing, setPlaying] = useState<string | null>(null);
-  const [volume, setVolume] = useState(50);
-  const audioRef = useRef<HTMLAudioElement>(null);
-
-  const togglePlay = (trackId: string) => {
-    if (playing === trackId) {
-      setPlaying(null);
-    } else {
-      setPlaying(trackId);
-    }
-  };
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (playing) {
-      const currentTrack = tracks.find(t => t.id === playing);
-      if (currentTrack?.audioSrc) {
-        audio.src = currentTrack.audioSrc;
-        audio.load();
-        audio.play().catch(err => {
-          console.error("Error playing audio:", err);
-        });
-      }
-    } else {
-      audio.pause();
-      audio.currentTime = 0;
-    }
-  }, [playing]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.volume = volume / 100;
-    }
-  }, [volume]);
+  const { playing, volume, togglePlay, setVolume } = useAudio();
 
   return (
     <div className="space-y-8">
@@ -193,7 +108,7 @@ export default function Sounds() {
             </div>
             <Button
               variant="ghost"
-              onClick={() => setPlaying(null)}
+              onClick={() => playing && togglePlay(playing)}
               data-testid="button-stop-player"
             >
               Stop
@@ -201,12 +116,6 @@ export default function Sounds() {
           </div>
         </Card>
       )}
-
-      <audio
-        ref={audioRef}
-        loop
-        preload="auto"
-      />
 
       <div className="h-24" />
     </div>

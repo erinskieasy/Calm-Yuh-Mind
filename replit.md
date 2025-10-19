@@ -20,19 +20,20 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
 - **Theme**: Light and dark mode toggle with persistent preference, smooth transitions.
 
 ### Technical Implementations
-- **Frontend**: React 18 with TypeScript, Wouter for routing, TanStack Query v5 for server state, Recharts for visualizations.
+- **Frontend**: React 18 with TypeScript, Wouter for routing, TanStack Query v5 for server state, Recharts for visualizations, Framer Motion for animations.
 - **Backend**: Express.js server.
 - **Authentication**: Replit Auth integration supporting multiple providers (Google, GitHub, X, Apple, email/password) with secure, session-based authentication persisted in PostgreSQL. All application features require authentication, and user data is isolated.
 - **AI Integration**: OpenAI API (GPT-4o-mini) via Replit AI Integrations for a compassionate AI companion, with conversation history persistence.
 - **Assessment Tools**: Comprehensive collection of 6 validated mental health screening tools (PHQ-9, GAD-7, PSS-10, Rosenberg Self-Esteem, UCLA Loneliness, PCL-5 Short) with randomized question presentation, auto-advancing flows, color-coded score interpretation, proper reverse scoring, and historical tracking.
 - **Therapist Directory**: Location-based search using the browser Geolocation API, distance filtering (Haversine formula), and specialty filtering. Therapist profiles can be managed by professionals.
+- **Global Audio Context**: React Context API provides persistent audio playback across all pages with centralized state management for volume and track selection.
 
 ### Feature Specifications
 - **Dashboard**: Real-time statistics, 7-day mood trend.
 - **Mood Tracker**: Log daily moods with intensity, notes, and a 30-day visual calendar.
 - **Digital Journal**: Rich text editor for entries with chronological timeline.
 - **Meditation & Breathing**: Guided exercises with interactive timers and session tracking.
-- **Soothing Sounds**: 6 ambient soundscapes with volume control and persistent player.
+- **Soothing Sounds**: 5 ambient soundscapes (Ocean Waves, Rainfall, Wind Chimes, Crackling Fire, White Noise) with volume control, persistent player, and continuous playback across all pages via global audio context.
 - **Self-Assessment Tools**: 
   - **Depression**: PHQ-9 (9 questions, 5-level severity)
   - **Anxiety**: GAD-7 (7 questions, 4-level severity)

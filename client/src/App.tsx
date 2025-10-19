@@ -9,6 +9,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { AudioProvider } from "@/contexts/AudioContext";
+import { PersistentAudioPlayer } from "@/components/persistent-audio-player";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import MoodTracker from "@/pages/mood-tracker";
@@ -58,10 +60,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light">
-        <TooltipProvider>
-          <AuthenticatedApp style={style} />
-          <Toaster />
-        </TooltipProvider>
+        <AudioProvider>
+          <TooltipProvider>
+            <AuthenticatedApp style={style} />
+            <Toaster />
+          </TooltipProvider>
+        </AudioProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
@@ -111,6 +115,7 @@ function AuthenticatedApp({ style }: { style: Record<string, string> }) {
           </main>
         </div>
       </div>
+      <PersistentAudioPlayer />
     </SidebarProvider>
   );
 }
