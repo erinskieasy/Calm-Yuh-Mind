@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Play, Pause, Volume2 } from "lucide-react";
+import oceanSoundsAudio from "@assets/Ocean Sounds_1760846545743.mp3";
 
 const tracks = [
   {
@@ -10,6 +11,7 @@ const tracks = [
     name: "Ocean Waves",
     description: "Gentle waves lapping on the shore",
     color: "hsl(200, 60%, 75%)",
+    audioSrc: oceanSoundsAudio,
   },
   {
     id: "rain",
@@ -46,6 +48,7 @@ const tracks = [
 export default function Sounds() {
   const [playing, setPlaying] = useState<string | null>(null);
   const [volume, setVolume] = useState(50);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const togglePlay = (trackId: string) => {
     if (playing === trackId) {
@@ -54,6 +57,27 @@ export default function Sounds() {
       setPlaying(trackId);
     }
   };
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (playing === "ocean-waves") {
+      audio.play().catch(err => {
+        console.error("Error playing audio:", err);
+      });
+    } else {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+  }, [playing]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.volume = volume / 100;
+    }
+  }, [volume]);
 
   return (
     <div className="space-y-8">
@@ -164,6 +188,13 @@ export default function Sounds() {
           </div>
         </Card>
       )}
+
+      <audio
+        ref={audioRef}
+        src={oceanSoundsAudio}
+        loop
+        preload="auto"
+      />
 
       <div className="h-24" />
     </div>
