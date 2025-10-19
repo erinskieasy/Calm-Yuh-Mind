@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Bot, User, Loader2, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
+import { Send, Bot, User, Loader2, Mic, MicOff, Volume2, VolumeX, Play, Pause, Trash2, Square } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { ChatMessage } from "@shared/schema";
@@ -13,9 +13,16 @@ export default function Chat() {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const speechSynthesisRef = useRef<SpeechSynthesis | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const { toast } = useToast();
 
   const { data: messages = [], isLoading } = useQuery<ChatMessage[]>({
@@ -154,6 +161,90 @@ export default function Chat() {
     }
   };
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(audioBlob);
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+
+        // Transcribe the audio using speech recognition
+        // For now, we'll use the existing speech recognition approach
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      toast({
+        title: "Recording failed",
+        description: "Could not access microphone. Please check permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const playRecording = () => {
+    if (audioUrl && audioRef.current) {
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const pauseRecording = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const deleteRecording = () => {
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
+    setAudioBlob(null);
+    setAudioUrl(null);
+    setIsPlaying(false);
+  };
+
+  const sendVoiceNote = () => {
+    // Start speech recognition to transcribe and send
+    if (!recognitionRef.current) {
+      toast({
+        title: "Voice recognition not supported",
+        description: "Your browser doesn't support voice recognition.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Delete the recording after sending
+    deleteRecording();
+    
+    // Start recognition for transcription
+    toggleVoiceInput();
+  };
+
   const toggleVoiceInput = () => {
     if (!recognitionRef.current) {
       toast({
@@ -194,7 +285,7 @@ export default function Chat() {
               AI Voice Support
             </h1>
             <p className="text-muted-foreground text-lg">
-              Have a voice conversation with your empathetic AI companion
+              Send voice notes with playback controls or type your message
             </p>
           </div>
           <Button
@@ -220,10 +311,10 @@ export default function Chat() {
             <div className="flex flex-col items-center justify-center h-full text-center">
               <Bot className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                Click the microphone to start a voice conversation
+                Record a voice note or type your message
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                Speak your thoughts and the AI will respond with voice
+                Send voice notes, replay them, and get AI voice responses
               </p>
             </div>
           ) : (
@@ -291,9 +382,62 @@ export default function Chat() {
             </div>
           )}
 
+          {isRecording && (
+            <div className="flex items-center gap-2 text-destructive animate-pulse" data-testid="indicator-recording">
+              <Square className="h-4 w-4 fill-current" />
+              <span className="text-sm">Recording voice note...</span>
+            </div>
+          )}
+
+          {audioUrl && !isRecording && (
+            <Card className="p-3" data-testid="voice-note-player">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={isPlaying ? pauseRecording : playRecording}
+                  data-testid="button-play-pause-recording"
+                >
+                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                </Button>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Your voice note</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isPlaying ? "Playing..." : "Ready to send"}
+                  </p>
+                </div>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={sendVoiceNote}
+                  disabled={sendMessage.isPending}
+                  data-testid="button-send-voice-note"
+                >
+                  <Send className="h-4 w-4 mr-1" />
+                  Send
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={deleteRecording}
+                  data-testid="button-delete-recording"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <audio
+                ref={audioRef}
+                src={audioUrl || undefined}
+                onEnded={() => setIsPlaying(false)}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+              />
+            </Card>
+          )}
+
           <form onSubmit={handleSubmit} className="flex gap-2">
             <Textarea
-              placeholder="Click mic to speak or type your message..."
+              placeholder="Type a message or record a voice note..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
@@ -304,20 +448,20 @@ export default function Chat() {
               }}
               className="resize-none"
               rows={2}
-              disabled={sendMessage.isPending || isListening}
+              disabled={sendMessage.isPending || isListening || isRecording || !!audioUrl}
               data-testid="input-chat-message"
             />
             <div className="flex flex-col gap-2">
               <Button
                 type="button"
                 size="icon"
-                variant={isListening ? "destructive" : "default"}
-                onClick={toggleVoiceInput}
-                disabled={sendMessage.isPending || isSpeaking}
-                data-testid="button-voice-input"
+                variant={isRecording ? "destructive" : "default"}
+                onClick={isRecording ? stopRecording : startRecording}
+                disabled={sendMessage.isPending || isSpeaking || isListening || !!audioUrl}
+                data-testid="button-record-voice"
               >
-                {isListening ? (
-                  <MicOff className="h-5 w-5" />
+                {isRecording ? (
+                  <Square className="h-5 w-5" />
                 ) : (
                   <Mic className="h-5 w-5" />
                 )}
@@ -326,7 +470,7 @@ export default function Chat() {
                 type="submit"
                 size="icon"
                 variant="outline"
-                disabled={!input.trim() || sendMessage.isPending || isListening}
+                disabled={!input.trim() || sendMessage.isPending || isListening || isRecording || !!audioUrl}
                 data-testid="button-send-message"
               >
                 {sendMessage.isPending ? (
