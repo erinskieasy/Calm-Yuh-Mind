@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, index, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, index, jsonb, doublePrecision, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -75,13 +75,57 @@ export const assessmentResults = pgTable("assessment_results", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Therapist profiles for nearby specialist search
+export const therapistProfiles = pgTable("therapist_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  bio: text("bio"),
+  credentials: text("credentials"),
+  specialties: text("specialties").array().notNull().default(sql`ARRAY[]::text[]`),
+  yearsExperience: integer("years_experience"),
+  acceptingClients: boolean("accepting_clients").default(true).notNull(),
+  
+  // Location data
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  zipCode: text("zip_code"),
+  country: text("country").default("USA"),
+  latitude: doublePrecision("latitude"),
+  longitude: doublePrecision("longitude"),
+  
+  // Contact preferences
+  phoneNumber: text("phone_number"),
+  website: text("website"),
+  offersVirtualSessions: boolean("offers_virtual_sessions").default(true).notNull(),
+  offersInPerson: boolean("offers_in_person").default(true).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Consultation requests from clients to therapists
+export const consultationRequests = pgTable("consultation_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  therapistId: varchar("therapist_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  status: text("status").notNull().default("pending"), // pending, accepted, declined, cancelled
+  message: text("message"),
+  responseMessage: text("response_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  respondedAt: timestamp("responded_at"),
+});
+
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   moodEntries: many(moodEntries),
   journalEntries: many(journalEntries),
   meditationSessions: many(meditationSessions),
   chatMessages: many(chatMessages),
   assessmentResults: many(assessmentResults),
+  therapistProfile: one(therapistProfiles),
+  sentConsultationRequests: many(consultationRequests, { relationName: "clientRequests" }),
+  receivedConsultationRequests: many(consultationRequests, { relationName: "therapistRequests" }),
 }));
 
 export const moodEntriesRelations = relations(moodEntries, ({ one }) => ({
@@ -116,6 +160,26 @@ export const assessmentResultsRelations = relations(assessmentResults, ({ one })
   user: one(users, {
     fields: [assessmentResults.userId],
     references: [users.id],
+  }),
+}));
+
+export const therapistProfilesRelations = relations(therapistProfiles, ({ one }) => ({
+  user: one(users, {
+    fields: [therapistProfiles.userId],
+    references: [users.id],
+  }),
+}));
+
+export const consultationRequestsRelations = relations(consultationRequests, ({ one }) => ({
+  client: one(users, {
+    fields: [consultationRequests.clientId],
+    references: [users.id],
+    relationName: "clientRequests",
+  }),
+  therapist: one(users, {
+    fields: [consultationRequests.therapistId],
+    references: [users.id],
+    relationName: "therapistRequests",
   }),
 }));
 
@@ -154,6 +218,25 @@ export const insertAssessmentResultSchema = createInsertSchema(assessmentResults
   createdAt: true,
 });
 
+export const insertTherapistProfileSchema = createInsertSchema(therapistProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateTherapistProfileSchema = createInsertSchema(therapistProfiles).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+}).partial();
+
+export const insertConsultationRequestSchema = createInsertSchema(consultationRequests).omit({
+  id: true,
+  createdAt: true,
+  respondedAt: true,
+});
+
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
 
@@ -171,3 +254,10 @@ export type ChatMessage = typeof chatMessages.$inferSelect;
 
 export type InsertAssessmentResult = z.infer<typeof insertAssessmentResultSchema>;
 export type AssessmentResult = typeof assessmentResults.$inferSelect;
+
+export type InsertTherapistProfile = z.infer<typeof insertTherapistProfileSchema>;
+export type UpdateTherapistProfile = z.infer<typeof updateTherapistProfileSchema>;
+export type TherapistProfile = typeof therapistProfiles.$inferSelect;
+
+export type InsertConsultationRequest = z.infer<typeof insertConsultationRequestSchema>;
+export type ConsultationRequest = typeof consultationRequests.$inferSelect;

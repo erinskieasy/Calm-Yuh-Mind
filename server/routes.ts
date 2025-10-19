@@ -8,7 +8,11 @@ import {
   insertMeditationSessionSchema,
   insertChatMessageSchema,
   insertAssessmentResultSchema,
+  insertTherapistProfileSchema,
+  updateTherapistProfileSchema,
+  insertConsultationRequestSchema,
 } from "@shared/schema";
+import { calculateDistance } from "./utils/distance";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
@@ -183,6 +187,173 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: "Invalid assessment data" });
+    }
+  });
+
+  // Therapist profile routes
+  app.get("/api/therapist/profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profile = await storage.getTherapistProfile(userId);
+      res.json(profile || null);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch therapist profile" });
+    }
+  });
+
+  app.post("/api/therapist/profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const data = insertTherapistProfileSchema.parse(req.body);
+      const profile = await storage.createTherapistProfile({ ...data, userId });
+      res.json(profile);
+    } catch (error: any) {
+      console.error("Create profile error:", error);
+      res.status(400).json({ error: error.message || "Invalid profile data" });
+    }
+  });
+
+  app.put("/api/therapist/profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const data = updateTherapistProfileSchema.parse(req.body);
+      const profile = await storage.updateTherapistProfile(userId, data);
+      res.json(profile);
+    } catch (error: any) {
+      console.error("Update profile error:", error);
+      res.status(400).json({ error: error.message || "Invalid profile data" });
+    }
+  });
+
+  app.delete("/api/therapist/profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.deleteTherapistProfile(userId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete profile" });
+    }
+  });
+
+  // Search nearby therapists
+  app.get("/api/therapists/nearby", isAuthenticated, async (req: any, res) => {
+    try {
+      const { latitude, longitude, maxDistance, specialties, offersVirtual } = req.query;
+
+      let profiles = await storage.getTherapistProfilesWithUserData();
+
+      // Filter by accepting clients
+      profiles = profiles.filter((p) => p.acceptingClients);
+
+      // Filter by location if coordinates provided
+      if (latitude && longitude) {
+        const userLat = parseFloat(latitude as string);
+        const userLon = parseFloat(longitude as string);
+        const maxDist = maxDistance ? parseFloat(maxDistance as string) : 50; // default 50km
+
+        profiles = profiles
+          .filter((p) => p.latitude !== null && p.longitude !== null)
+          .map((p) => ({
+            ...p,
+            distance: calculateDistance(userLat, userLon, p.latitude!, p.longitude!),
+          }))
+          .filter((p) => p.distance <= maxDist)
+          .sort((a, b) => a.distance - b.distance);
+      }
+
+      // Filter by specialties
+      if (specialties) {
+        const specialtiesArray = (specialties as string).split(",").map((s) => s.trim().toLowerCase());
+        profiles = profiles.filter((p) =>
+          p.specialties.some((s) => specialtiesArray.includes(s.toLowerCase()))
+        );
+      }
+
+      // Filter by virtual sessions
+      if (offersVirtual === "true") {
+        profiles = profiles.filter((p) => p.offersVirtualSessions);
+      }
+
+      res.json(profiles);
+    } catch (error) {
+      console.error("Search therapists error:", error);
+      res.status(500).json({ error: "Failed to search therapists" });
+    }
+  });
+
+  // Consultation request routes
+  app.get("/api/consultation-requests", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      let requests;
+      if (user.role === "therapist") {
+        requests = await storage.getTherapistConsultationRequests(userId);
+      } else {
+        requests = await storage.getClientConsultationRequests(userId);
+      }
+
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch consultation requests" });
+    }
+  });
+
+  app.post("/api/consultation-requests", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const data = insertConsultationRequestSchema.parse({
+        ...req.body,
+        clientId: userId,
+      });
+
+      // Check if request already exists
+      const existingRequests = await storage.getClientConsultationRequests(userId);
+      const alreadyExists = existingRequests.some(
+        (r) => r.therapistId === data.therapistId && r.status === "pending"
+      );
+
+      if (alreadyExists) {
+        return res.status(400).json({ error: "Consultation request already pending" });
+      }
+
+      const request = await storage.createConsultationRequest(data);
+      res.json(request);
+    } catch (error: any) {
+      console.error("Create request error:", error);
+      res.status(400).json({ error: error.message || "Invalid request data" });
+    }
+  });
+
+  app.put("/api/consultation-requests/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      const { status, responseMessage } = req.body;
+
+      const request = await storage.getConsultationRequest(id);
+      if (!request) {
+        return res.status(404).json({ error: "Request not found" });
+      }
+
+      // Only therapist can update their received requests
+      if (request.therapistId !== userId) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+
+      const updatedRequest = await storage.updateConsultationRequestStatus(
+        id,
+        status,
+        responseMessage
+      );
+      res.json(updatedRequest);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update request" });
     }
   });
 

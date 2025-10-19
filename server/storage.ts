@@ -5,6 +5,8 @@ import {
   meditationSessions,
   chatMessages,
   assessmentResults,
+  therapistProfiles,
+  consultationRequests,
   type User,
   type UpsertUser,
   type MoodEntry,
@@ -17,9 +19,14 @@ import {
   type InsertChatMessage,
   type AssessmentResult,
   type InsertAssessmentResult,
+  type TherapistProfile,
+  type InsertTherapistProfile,
+  type UpdateTherapistProfile,
+  type ConsultationRequest,
+  type InsertConsultationRequest,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, or, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -43,6 +50,25 @@ export interface IStorage {
 
   getAssessmentResults(userId: string): Promise<AssessmentResult[]>;
   createAssessmentResult(result: InsertAssessmentResult): Promise<AssessmentResult>;
+
+  // Therapist profiles
+  getTherapistProfile(userId: string): Promise<TherapistProfile | undefined>;
+  getTherapistProfiles(): Promise<TherapistProfile[]>;
+  getTherapistProfilesWithUserData(): Promise<(TherapistProfile & { user: User })[]>;
+  createTherapistProfile(profile: InsertTherapistProfile): Promise<TherapistProfile>;
+  updateTherapistProfile(userId: string, profile: UpdateTherapistProfile): Promise<TherapistProfile>;
+  deleteTherapistProfile(userId: string): Promise<void>;
+
+  // Consultation requests
+  getConsultationRequest(id: string): Promise<ConsultationRequest | undefined>;
+  getClientConsultationRequests(clientId: string): Promise<ConsultationRequest[]>;
+  getTherapistConsultationRequests(therapistId: string): Promise<ConsultationRequest[]>;
+  createConsultationRequest(request: InsertConsultationRequest): Promise<ConsultationRequest>;
+  updateConsultationRequestStatus(
+    id: string,
+    status: string,
+    responseMessage?: string
+  ): Promise<ConsultationRequest>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -168,6 +194,113 @@ export class DatabaseStorage implements IStorage {
       .values(insertResult)
       .returning();
     return result;
+  }
+
+  // Therapist profiles
+  async getTherapistProfile(userId: string): Promise<TherapistProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(therapistProfiles)
+      .where(eq(therapistProfiles.userId, userId));
+    return profile;
+  }
+
+  async getTherapistProfiles(): Promise<TherapistProfile[]> {
+    return await db
+      .select()
+      .from(therapistProfiles)
+      .orderBy(desc(therapistProfiles.createdAt));
+  }
+
+  async getTherapistProfilesWithUserData(): Promise<(TherapistProfile & { user: User })[]> {
+    const results = await db
+      .select()
+      .from(therapistProfiles)
+      .innerJoin(users, eq(therapistProfiles.userId, users.id))
+      .orderBy(desc(therapistProfiles.createdAt));
+    
+    return results.map(row => ({
+      ...row.therapist_profiles,
+      user: row.users,
+    }));
+  }
+
+  async createTherapistProfile(insertProfile: InsertTherapistProfile): Promise<TherapistProfile> {
+    const [profile] = await db
+      .insert(therapistProfiles)
+      .values(insertProfile)
+      .returning();
+    return profile;
+  }
+
+  async updateTherapistProfile(
+    userId: string,
+    updateData: UpdateTherapistProfile
+  ): Promise<TherapistProfile> {
+    const [profile] = await db
+      .update(therapistProfiles)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(therapistProfiles.userId, userId))
+      .returning();
+    return profile;
+  }
+
+  async deleteTherapistProfile(userId: string): Promise<void> {
+    await db
+      .delete(therapistProfiles)
+      .where(eq(therapistProfiles.userId, userId));
+  }
+
+  // Consultation requests
+  async getConsultationRequest(id: string): Promise<ConsultationRequest | undefined> {
+    const [request] = await db
+      .select()
+      .from(consultationRequests)
+      .where(eq(consultationRequests.id, id));
+    return request;
+  }
+
+  async getClientConsultationRequests(clientId: string): Promise<ConsultationRequest[]> {
+    return await db
+      .select()
+      .from(consultationRequests)
+      .where(eq(consultationRequests.clientId, clientId))
+      .orderBy(desc(consultationRequests.createdAt));
+  }
+
+  async getTherapistConsultationRequests(therapistId: string): Promise<ConsultationRequest[]> {
+    return await db
+      .select()
+      .from(consultationRequests)
+      .where(eq(consultationRequests.therapistId, therapistId))
+      .orderBy(desc(consultationRequests.createdAt));
+  }
+
+  async createConsultationRequest(
+    insertRequest: InsertConsultationRequest
+  ): Promise<ConsultationRequest> {
+    const [request] = await db
+      .insert(consultationRequests)
+      .values(insertRequest)
+      .returning();
+    return request;
+  }
+
+  async updateConsultationRequestStatus(
+    id: string,
+    status: string,
+    responseMessage?: string
+  ): Promise<ConsultationRequest> {
+    const [request] = await db
+      .update(consultationRequests)
+      .set({
+        status,
+        responseMessage,
+        respondedAt: new Date(),
+      })
+      .where(eq(consultationRequests.id, id))
+      .returning();
+    return request;
   }
 }
 
