@@ -1,6 +1,12 @@
 import {
+  users,
+  moodEntries,
+  journalEntries,
+  meditationSessions,
+  chatMessages,
+  assessmentResults,
   type User,
-  type InsertUser,
+  type UpsertUser,
   type MoodEntry,
   type InsertMoodEntry,
   type JournalEntry,
@@ -12,163 +18,157 @@ import {
   type AssessmentResult,
   type InsertAssessmentResult,
 } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { db } from "./db";
+import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
+  // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
 
-  getMoodEntries(): Promise<MoodEntry[]>;
+  // User-specific data operations
+  getMoodEntries(userId: string): Promise<MoodEntry[]>;
   createMoodEntry(entry: InsertMoodEntry): Promise<MoodEntry>;
 
-  getJournalEntries(): Promise<JournalEntry[]>;
-  getJournalEntry(id: string): Promise<JournalEntry | undefined>;
+  getJournalEntries(userId: string): Promise<JournalEntry[]>;
+  getJournalEntry(id: string, userId: string): Promise<JournalEntry | undefined>;
   createJournalEntry(entry: InsertJournalEntry): Promise<JournalEntry>;
-  deleteJournalEntry(id: string): Promise<void>;
+  deleteJournalEntry(id: string, userId: string): Promise<void>;
 
-  getMeditationSessions(): Promise<MeditationSession[]>;
+  getMeditationSessions(userId: string): Promise<MeditationSession[]>;
   createMeditationSession(session: InsertMeditationSession): Promise<MeditationSession>;
 
-  getChatMessages(): Promise<ChatMessage[]>;
+  getChatMessages(userId: string): Promise<ChatMessage[]>;
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
 
-  getAssessmentResults(): Promise<AssessmentResult[]>;
+  getAssessmentResults(userId: string): Promise<AssessmentResult[]>;
   createAssessmentResult(result: InsertAssessmentResult): Promise<AssessmentResult>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private moodEntries: Map<string, MoodEntry>;
-  private journalEntries: Map<string, JournalEntry>;
-  private meditationSessions: Map<string, MeditationSession>;
-  private chatMessages: Map<string, ChatMessage>;
-  private assessmentResults: Map<string, AssessmentResult>;
-
-  constructor() {
-    this.users = new Map();
-    this.moodEntries = new Map();
-    this.journalEntries = new Map();
-    this.meditationSessions = new Map();
-    this.chatMessages = new Map();
-    this.assessmentResults = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
+  // User operations (required for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
-  async getMoodEntries(): Promise<MoodEntry[]> {
-    return Array.from(this.moodEntries.values()).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  // Mood entries
+  async getMoodEntries(userId: string): Promise<MoodEntry[]> {
+    return await db
+      .select()
+      .from(moodEntries)
+      .where(eq(moodEntries.userId, userId))
+      .orderBy(desc(moodEntries.createdAt));
   }
 
   async createMoodEntry(insertEntry: InsertMoodEntry): Promise<MoodEntry> {
-    const id = randomUUID();
-    const entry: MoodEntry = {
-      ...insertEntry,
-      note: insertEntry.note ?? null,
-      id,
-      createdAt: new Date(),
-    };
-    this.moodEntries.set(id, entry);
+    const [entry] = await db
+      .insert(moodEntries)
+      .values(insertEntry)
+      .returning();
     return entry;
   }
 
-  async getJournalEntries(): Promise<JournalEntry[]> {
-    return Array.from(this.journalEntries.values()).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+  // Journal entries
+  async getJournalEntries(userId: string): Promise<JournalEntry[]> {
+    return await db
+      .select()
+      .from(journalEntries)
+      .where(eq(journalEntries.userId, userId))
+      .orderBy(desc(journalEntries.createdAt));
   }
 
-  async getJournalEntry(id: string): Promise<JournalEntry | undefined> {
-    return this.journalEntries.get(id);
+  async getJournalEntry(id: string, userId: string): Promise<JournalEntry | undefined> {
+    const [entry] = await db
+      .select()
+      .from(journalEntries)
+      .where(and(eq(journalEntries.id, id), eq(journalEntries.userId, userId)));
+    return entry;
   }
 
   async createJournalEntry(insertEntry: InsertJournalEntry): Promise<JournalEntry> {
-    const id = randomUUID();
-    const entry: JournalEntry = {
-      ...insertEntry,
-      mood: insertEntry.mood ?? null,
-      id,
-      createdAt: new Date(),
-    };
-    this.journalEntries.set(id, entry);
+    const [entry] = await db
+      .insert(journalEntries)
+      .values(insertEntry)
+      .returning();
     return entry;
   }
 
-  async deleteJournalEntry(id: string): Promise<void> {
-    this.journalEntries.delete(id);
+  async deleteJournalEntry(id: string, userId: string): Promise<void> {
+    await db
+      .delete(journalEntries)
+      .where(and(eq(journalEntries.id, id), eq(journalEntries.userId, userId)));
   }
 
-  async getMeditationSessions(): Promise<MeditationSession[]> {
-    return Array.from(this.meditationSessions.values()).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+  // Meditation sessions
+  async getMeditationSessions(userId: string): Promise<MeditationSession[]> {
+    return await db
+      .select()
+      .from(meditationSessions)
+      .where(eq(meditationSessions.userId, userId))
+      .orderBy(desc(meditationSessions.createdAt));
   }
 
   async createMeditationSession(
     insertSession: InsertMeditationSession
   ): Promise<MeditationSession> {
-    const id = randomUUID();
-    const session: MeditationSession = {
-      ...insertSession,
-      id,
-      createdAt: new Date(),
-    };
-    this.meditationSessions.set(id, session);
+    const [session] = await db
+      .insert(meditationSessions)
+      .values(insertSession)
+      .returning();
     return session;
   }
 
-  async getChatMessages(): Promise<ChatMessage[]> {
-    return Array.from(this.chatMessages.values()).sort(
-      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
+  // Chat messages
+  async getChatMessages(userId: string): Promise<ChatMessage[]> {
+    return await db
+      .select()
+      .from(chatMessages)
+      .where(eq(chatMessages.userId, userId))
+      .orderBy(chatMessages.createdAt);
   }
 
   async createChatMessage(insertMessage: InsertChatMessage): Promise<ChatMessage> {
-    const id = randomUUID();
-    const message: ChatMessage = {
-      ...insertMessage,
-      id,
-      createdAt: new Date(),
-    };
-    this.chatMessages.set(id, message);
+    const [message] = await db
+      .insert(chatMessages)
+      .values(insertMessage)
+      .returning();
     return message;
   }
 
-  async getAssessmentResults(): Promise<AssessmentResult[]> {
-    return Array.from(this.assessmentResults.values()).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+  // Assessment results
+  async getAssessmentResults(userId: string): Promise<AssessmentResult[]> {
+    return await db
+      .select()
+      .from(assessmentResults)
+      .where(eq(assessmentResults.userId, userId))
+      .orderBy(desc(assessmentResults.createdAt));
   }
 
   async createAssessmentResult(
     insertResult: InsertAssessmentResult
   ): Promise<AssessmentResult> {
-    const id = randomUUID();
-    const result: AssessmentResult = {
-      ...insertResult,
-      id,
-      createdAt: new Date(),
-    };
-    this.assessmentResults.set(id, result);
+    const [result] = await db
+      .insert(assessmentResults)
+      .values(insertResult)
+      .returning();
     return result;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

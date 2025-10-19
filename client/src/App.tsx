@@ -7,6 +7,9 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import MoodTracker from "@/pages/mood-tracker";
 import Journal from "@/pages/journal";
@@ -17,6 +20,17 @@ import Sounds from "@/pages/sounds";
 import NotFound from "@/pages/not-found";
 
 function Router() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading || !isAuthenticated) {
+    return (
+      <Switch>
+        <Route path="/" component={Landing} />
+        <Route component={NotFound} />
+      </Switch>
+    );
+  }
+
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
@@ -41,24 +55,59 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
-          <SidebarProvider style={style as React.CSSProperties}>
-            <div className="flex h-screen w-full">
-              <AppSidebar />
-              <div className="flex flex-col flex-1 overflow-hidden">
-                <header className="flex items-center justify-between p-4 border-b">
-                  <SidebarTrigger data-testid="button-sidebar-toggle" />
-                  <ThemeToggle />
-                </header>
-                <main className="flex-1 overflow-y-auto p-8">
-                  <Router />
-                </main>
-              </div>
-            </div>
-          </SidebarProvider>
+          <AuthenticatedApp style={style} />
           <Toaster />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
+  );
+}
+
+function AuthenticatedApp({ style }: { style: Record<string, string> }) {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Router />;
+  }
+
+  return (
+    <SidebarProvider style={style as React.CSSProperties}>
+      <div className="flex h-screen w-full">
+        <AppSidebar />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <header className="flex items-center justify-between p-4 border-b gap-4">
+            <SidebarTrigger data-testid="button-sidebar-toggle" />
+            <div className="flex items-center gap-4">
+              {user && (user as any).email && (
+                <span className="text-sm text-muted-foreground" data-testid="text-user-email">
+                  {(user as any).email}
+                </span>
+              )}
+              <ThemeToggle />
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => window.location.href = "/api/logout"}
+                data-testid="button-logout"
+              >
+                Logout
+              </Button>
+            </div>
+          </header>
+          <main className="flex-1 overflow-y-auto p-8">
+            <Router />
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 }
 
