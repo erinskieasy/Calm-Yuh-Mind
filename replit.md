@@ -51,7 +51,7 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
 - **Meditation & Breathing**: Guided exercises with interactive timers and session tracking.
 - **Soothing Sounds**: 6 ambient soundscapes (Ocean Waves, Rainfall, Wind Chimes, Crackling Fire, White Noise, Nature Sounds) plus custom MP3 upload feature with volume control, persistent player, and continuous playback across all pages via global audio context. User-isolated storage with 50MB file limit.
 - **Mini Games**: Four calming, wellness-focused games for mindful breaks: Memory Match (peaceful icon matching to improve focus), Breathing Rhythm (follow breathing patterns to calm the mind), Mindful Bubbles (pop bubbles with satisfying sound effects to release stress), and Tic Tac Toe (strategic thinking against AI with score tracking). Each game tracks progress and provides relaxing interactions.
-- **Anonymous Message Forum**: Placeholder page for future community feature where users can share thoughts and connect anonymously. Located at `/anon-forum` in Community section of sidebar.
+- **Community Forum**: Full-featured anonymous discussion system with 6 seeded forum categories (General Discussion, Sports & Fitness, Art & Creativity, Music & Entertainment, Mental Health Support, Self-Care & Wellness). Users can create anonymous posts with titles and content, comment on posts, and delete their own contributions. All content is moderated by an AI moderator powered by OpenAI GPT-4o-mini that detects derogatory language, hate speech, and harmful content. Posts and comments flagged by the moderator are rejected with specific warnings. Forum posts display comment counts and timestamps, maintaining full anonymity while enabling community connection.
 - **Settings**: Comprehensive user preferences page with multiple customization options:
   - **Profile Pictures**: 4 preset image avatars (Flower 🌸, Leaf 🍃, Moon 🌙, Sun ☀️) using actual image files from attached_assets, plus custom upload functionality (5MB limit, JPEG/PNG/GIF/WebP). Custom uploads stored in `/uploads/profile-pictures/`. Database stores either `preset:flower` (etc.) or `/uploads/profile-pictures/[filename]` path.
   - **Font Styles**: 4 font options including Inter (default), Georgia (serif), Comic Sans (playful), and OpenDyslexic (dyslexia-friendly with enhanced spacing)
@@ -71,7 +71,7 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
   - **Category Organization**: Assessments grouped by mental health domain
 
 ### System Design Choices
-- **Data Isolation**: All user data (moods, journals, assessments, chat history, meditation sessions, custom sounds, uploaded images) is scoped to authenticated users.
+- **Data Isolation**: All user data (moods, journals, assessments, chat history, meditation sessions, custom sounds, uploaded images, forum posts, and comments) is scoped to authenticated users.
 - **Validation**: Zod schemas used for data validation.
 - **Modularity**: Project structure separates client, server, and shared components.
 - **File Storage**: Uploaded files stored in `uploads/sounds/`, `uploads/journal-images/`, and `uploads/profile-pictures/` directories with automatic cleanup on deletion.
