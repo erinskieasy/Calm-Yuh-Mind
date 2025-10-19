@@ -74,7 +74,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/moods", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const moods = await storage.getMoodEntries(userId);
+      const month = req.query.month ? parseInt(req.query.month as string) : undefined;
+      const year = req.query.year ? parseInt(req.query.year as string) : undefined;
+      const moods = await storage.getMoodEntries(userId, month, year);
       res.json(moods);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch mood entries" });
