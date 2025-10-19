@@ -343,6 +343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const transcribedText = transcription.text;
+      console.log("Voice note transcribed:", transcribedText);
 
       // Create user message with audio and transcribed content
       const userMessage = await storage.createChatMessage({
@@ -359,7 +360,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content: msg.content,
       }));
 
-      // Get AI response
+      // Get AI response with same improved prompt as text chat
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
