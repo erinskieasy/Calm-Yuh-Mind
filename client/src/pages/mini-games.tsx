@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Gamepad2, Sparkles, Circle, Brain } from "lucide-react";
+import { Gamepad2, Sparkles, Circle, Brain, Grid3x3 } from "lucide-react";
 import { MemoryGame } from "@/components/games/memory-game";
 import { BreathingGame } from "@/components/games/breathing-game";
 import { BubblePopGame } from "@/components/games/bubble-pop-game";
+import { TicTacToe } from "@/components/games/tic-tac-toe";
 
-type GameType = "memory" | "breathing" | "bubbles" | null;
+type GameType = "memory" | "breathing" | "bubbles" | "tictactoe" | null;
 
 export default function MiniGames() {
   const [activeGame, setActiveGame] = useState<GameType>(null);
@@ -33,6 +34,13 @@ export default function MiniGames() {
       icon: Sparkles,
       color: "#ba68c8",
     },
+    {
+      id: "tictactoe" as const,
+      title: "Tic Tac Toe",
+      description: "Play against AI and practice strategic thinking",
+      icon: Grid3x3,
+      color: "#ff9800",
+    },
   ];
 
   if (activeGame) {
@@ -52,6 +60,7 @@ export default function MiniGames() {
         {activeGame === "memory" && <MemoryGame />}
         {activeGame === "breathing" && <BreathingGame />}
         {activeGame === "bubbles" && <BubblePopGame />}
+        {activeGame === "tictactoe" && <TicTacToe />}
       </div>
     );
   }
