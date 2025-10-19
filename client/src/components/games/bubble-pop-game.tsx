@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import popSoundUrl from "@assets/Pop! Sound Effect_1760869241625.mp3";
 
 type Bubble = {
   id: number;
@@ -19,6 +20,12 @@ export function BubblePopGame() {
   const [score, setScore] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [nextId, setNextId] = useState(0);
+  const popSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    popSoundRef.current = new Audio(popSoundUrl);
+    popSoundRef.current.volume = 0.4;
+  }, []);
 
   const createBubble = (): Bubble => {
     return {
@@ -67,6 +74,13 @@ export function BubblePopGame() {
   const handleBubbleClick = (id: number) => {
     setBubbles((prev) => prev.filter((b) => b.id !== id));
     setScore((prev) => prev + 1);
+    
+    if (popSoundRef.current) {
+      popSoundRef.current.currentTime = 0;
+      popSoundRef.current.play().catch(() => {
+        // Ignore errors if audio playback is blocked
+      });
+    }
   };
 
   const handleStart = () => {
