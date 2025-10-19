@@ -140,6 +140,43 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - **Crisis Text Line**: Text HOME to 741741 (US)
 - **International Association for Suicide Prevention**: https://www.iasp.info/resources/Crisis_Centres/
 
+## Deployment
+
+This app is a traditional Node.js/Express server and is **NOT compatible with Vercel**. Use one of these platforms instead:
+
+### 🚀 Railway (Recommended)
+
+1. Go to [Railway.app](https://railway.app)
+2. Click "Start a New Project"
+3. Select "Deploy from GitHub repo"
+4. Choose your `Calm-Yuh-Mind` repository
+5. Railway will auto-detect the Node.js app
+6. Add environment variables in the Railway dashboard:
+   - `DATABASE_URL`
+   - `SESSION_SECRET`
+   - `AI_INTEGRATIONS_OPENAI_API_KEY`
+   - `PORT` (Railway sets this automatically, but you can override)
+7. Deploy!
+
+### 🎯 Render
+
+1. Go to [Render.com](https://render.com)
+2. Click "New +" → "Web Service"
+3. Connect your GitHub repository
+4. Configure:
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `npm run start`
+5. Add environment variables in Render dashboard
+6. Deploy!
+
+### 📝 Environment Variables Needed
+
+Make sure to set these on your deployment platform:
+- `DATABASE_URL` - Your Neon PostgreSQL connection string
+- `SESSION_SECRET` - Random secret string for sessions
+- `AI_INTEGRATIONS_OPENAI_API_KEY` - Your OpenAI API key
+- `NODE_ENV` - Set to `production`
+
 ## License
 
 MIT License - feel free to use this project for personal or educational purposes.
