@@ -152,10 +152,13 @@ export default function MoodTracker() {
     };
   }, [moodEntries]);
 
-  // Generate years for selector (current year and past 5 years)
+  // Generate years for selector (30 years past to 30 years future)
   const years = useMemo(() => {
     const currentYear = new Date().getFullYear();
-    return Array.from({ length: 6 }, (_, i) => currentYear - i);
+    const startYear = currentYear - 30;
+    const endYear = currentYear + 30;
+    const totalYears = endYear - startYear + 1;
+    return Array.from({ length: totalYears }, (_, i) => startYear + i).reverse();
   }, []);
 
   const months = [
