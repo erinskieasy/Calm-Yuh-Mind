@@ -57,11 +57,8 @@ export default function ForumDetail() {
 
   const createPostMutation = useMutation({
     mutationFn: async (data: { title: string; content: string }) => {
-      return await apiRequest(`/api/forums/${forumId}/posts`, {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await apiRequest("POST", `/api/forums/${forumId}/posts`, data);
+      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/forums", forumId, "posts"] });
@@ -92,9 +89,8 @@ export default function ForumDetail() {
 
   const deletePostMutation = useMutation({
     mutationFn: async (postId: string) => {
-      return await apiRequest(`/api/forums/posts/${postId}`, {
-        method: "DELETE",
-      });
+      const res = await apiRequest("DELETE", `/api/forums/posts/${postId}`);
+      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/forums", forumId, "posts"] });
@@ -114,11 +110,8 @@ export default function ForumDetail() {
 
   const createCommentMutation = useMutation({
     mutationFn: async (data: { postId: string; content: string }) => {
-      return await apiRequest(`/api/forums/posts/${data.postId}/comments`, {
-        method: "POST",
-        body: JSON.stringify({ content: data.content }),
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await apiRequest("POST", `/api/forums/posts/${data.postId}/comments`, { content: data.content });
+      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/forums/posts", selectedPostId, "comments"] });
@@ -148,9 +141,8 @@ export default function ForumDetail() {
 
   const deleteCommentMutation = useMutation({
     mutationFn: async (commentId: string) => {
-      return await apiRequest(`/api/forums/comments/${commentId}`, {
-        method: "DELETE",
-      });
+      const res = await apiRequest("DELETE", `/api/forums/comments/${commentId}`);
+      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/forums/posts", selectedPostId, "comments"] });

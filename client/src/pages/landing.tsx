@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, Heart, MessageCircle, Activity, Music, FileText } from "lucide-react";
+import { Brain, Heart, MessageCircle, Activity, Music, FileText, Mail, Chrome } from "lucide-react";
+import { SiGithub, SiX, SiApple } from "react-icons/si";
 
 export default function Landing() {
   return (
@@ -18,7 +19,7 @@ export default function Landing() {
             <p className="text-lg text-muted-foreground/80 max-w-xl mx-auto">
               Track your moods, journal your thoughts, practice mindfulness, and get AI-powered support—all in one calming space
             </p>
-            <div className="pt-4">
+            <div className="pt-4 space-y-4">
               <Button 
                 size="lg" 
                 className="text-lg px-8 py-6"
@@ -27,6 +28,16 @@ export default function Landing() {
               >
                 Get Started
               </Button>
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <span>Sign up or log in with:</span>
+                <div className="flex items-center gap-1">
+                  <Mail className="w-4 h-4" />
+                  <Chrome className="w-4 h-4" />
+                  <SiGithub className="w-4 h-4" />
+                  <SiX className="w-4 h-4" />
+                  <SiApple className="w-4 h-4" />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -100,15 +111,23 @@ export default function Landing() {
                 Ready to start your wellness journey?
               </h2>
               <p className="text-muted-foreground">
-                Sign in to access all features and begin tracking your mental health
+                Create an account or sign in with email, Google, GitHub, X, or Apple
               </p>
-              <Button 
-                size="lg"
-                onClick={() => window.location.href = "/api/login"}
-                data-testid="button-login-cta"
-              >
-                Sign In
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button 
+                  size="lg"
+                  onClick={() => window.location.href = "/api/login"}
+                  data-testid="button-login-cta"
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  Sign Up / Sign In
+                </Button>
+              </div>
+              <div className="flex items-center justify-center gap-4 pt-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>Powered by secure authentication</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
