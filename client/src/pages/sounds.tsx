@@ -7,6 +7,7 @@ import oceanSoundsAudio from "@assets/Ocean Sounds_1760846545743.mp3";
 import windChimesAudio from "@assets/Wind Chimes_1760847358473.mp3";
 import fireplaceAudio from "@assets/Crackling Sounds_1760848106418.mp3";
 import rainAudio from "@assets/Rain Sounds_1760848622709.mp3";
+import whiteNoiseAudio from "@assets/White Noise_1760849619231.mp3";
 
 const tracks = [
   {
@@ -48,6 +49,7 @@ const tracks = [
     name: "White Noise",
     description: "Steady background hum",
     color: "hsl(220, 10%, 50%)",
+    audioSrc: whiteNoiseAudio,
   },
 ];
 
