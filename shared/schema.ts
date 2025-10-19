@@ -219,6 +219,7 @@ export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({
 
 export const insertJournalEntrySchema = createInsertSchema(journalEntries).omit({
   id: true,
+  userId: true,
   createdAt: true,
 });
 
