@@ -6,6 +6,7 @@ import { Play, Pause, Volume2 } from "lucide-react";
 import oceanSoundsAudio from "@assets/Ocean Sounds_1760846545743.mp3";
 import windChimesAudio from "@assets/Wind Chimes_1760847358473.mp3";
 import fireplaceAudio from "@assets/Crackling Sounds_1760848106418.mp3";
+import rainAudio from "@assets/Rain Sounds_1760848622709.mp3";
 
 const tracks = [
   {
@@ -20,6 +21,7 @@ const tracks = [
     name: "Rainfall",
     description: "Soft rain on leaves",
     color: "hsl(210, 35%, 60%)",
+    audioSrc: rainAudio,
   },
   {
     id: "forest",
