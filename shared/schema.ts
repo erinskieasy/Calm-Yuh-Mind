@@ -71,6 +71,7 @@ export const assessmentResults = pgTable("assessment_results", {
   type: text("type").notNull(),
   score: integer("score").notNull(),
   answers: text("answers").notNull(),
+  questionOrder: text("question_order"), // JSON array of question indices
   date: text("date").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
