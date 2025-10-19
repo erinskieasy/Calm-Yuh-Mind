@@ -3,11 +3,11 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { BookOpen, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { JournalEntry, InsertJournalEntry } from "@shared/schema";
+import { RichTextEditor } from "@/components/rich-text-editor";
 
 export default function Journal() {
   const [isWriting, setIsWriting] = useState(false);
@@ -101,12 +101,10 @@ export default function Journal() {
               className="text-xl font-display"
               data-testid="input-journal-title"
             />
-            <Textarea
+            <RichTextEditor
+              content={content}
+              onChange={setContent}
               placeholder="What's on your mind? Write freely..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="min-h-[300px] resize-none leading-relaxed"
-              data-testid="input-journal-content"
             />
             <div className="flex gap-2 justify-end">
               <Button
@@ -179,9 +177,11 @@ export default function Journal() {
                 </Button>
               </CardHeader>
               <CardContent className="px-0 pb-0">
-                <p className="text-foreground leading-relaxed whitespace-pre-wrap">
-                  {entry.content}
-                </p>
+                <div 
+                  className="text-foreground leading-relaxed prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: entry.content }}
+                  data-testid={`content-${entry.id}`}
+                />
               </CardContent>
             </Card>
           ))
