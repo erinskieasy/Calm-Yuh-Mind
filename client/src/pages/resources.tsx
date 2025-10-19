@@ -1,7 +1,15 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Video, FileText, ExternalLink } from "lucide-react";
+import { BookOpen, Video, FileText, ExternalLink, Phone, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const articles = [
   {
@@ -132,7 +140,253 @@ const videos = [
   },
 ];
 
+interface CrisisResource {
+  country: string;
+  hotline: {
+    name: string;
+    number: string;
+    hours: string;
+  };
+  textLine: {
+    name: string;
+    number: string;
+    hours: string;
+  };
+}
+
+const crisisResources: CrisisResource[] = [
+  {
+    country: "Argentina",
+    hotline: { name: "Centro de Asistencia al Suicida", number: "135", hours: "24/7" },
+    textLine: { name: "Mental Health Line", number: "(011) 5275-1135", hours: "24/7" },
+  },
+  {
+    country: "Australia",
+    hotline: { name: "Lifeline Australia", number: "13 11 14", hours: "24/7" },
+    textLine: { name: "Crisis Text Line", number: "Text 0477 13 11 14", hours: "24/7" },
+  },
+  {
+    country: "Austria",
+    hotline: { name: "Telefonseelsorge", number: "142", hours: "24/7" },
+    textLine: { name: "Online Counseling", number: "Visit www.telefonseelsorge.at", hours: "24/7" },
+  },
+  {
+    country: "Belgium",
+    hotline: { name: "Centre de Prévention du Suicide", number: "0800 32 123", hours: "24/7" },
+    textLine: { name: "Suicide Hotline", number: "1813", hours: "24/7" },
+  },
+  {
+    country: "Brazil",
+    hotline: { name: "CVV - Centro de Valorização da Vida", number: "188", hours: "24/7" },
+    textLine: { name: "CVV Chat", number: "Visit www.cvv.org.br", hours: "24/7" },
+  },
+  {
+    country: "Canada",
+    hotline: { name: "Talk Suicide Canada", number: "1-833-456-4566", hours: "24/7" },
+    textLine: { name: "Crisis Text Line", number: "Text HOME to 686868", hours: "24/7" },
+  },
+  {
+    country: "Chile",
+    hotline: { name: "Salud Responde", number: "600 360 7777", hours: "24/7" },
+    textLine: { name: "Todo Mejora", number: "Text +56 9 9999 0000", hours: "24/7" },
+  },
+  {
+    country: "China",
+    hotline: { name: "Beijing Suicide Research and Prevention Center", number: "010-82951332", hours: "24/7" },
+    textLine: { name: "Shanghai Mental Health Center", number: "021-64387250", hours: "8am-8pm" },
+  },
+  {
+    country: "Colombia",
+    hotline: { name: "Línea 106", number: "106", hours: "24/7" },
+    textLine: { name: "Teléfono de la Esperanza", number: "(1) 323 24 25", hours: "24/7" },
+  },
+  {
+    country: "Denmark",
+    hotline: { name: "Livslinien", number: "70 201 201", hours: "24/7" },
+    textLine: { name: "Børns Vilkår", number: "116 111", hours: "11am-11pm" },
+  },
+  {
+    country: "Finland",
+    hotline: { name: "Crisis Helpline", number: "09-2525-0111", hours: "24/7" },
+    textLine: { name: "Finnish Association for Mental Health", number: "Visit mieli.fi/en", hours: "Mon-Fri 9am-3pm" },
+  },
+  {
+    country: "France",
+    hotline: { name: "SOS Amitié", number: "09 72 39 40 50", hours: "24/7" },
+    textLine: { name: "Suicide Écoute", number: "01 45 39 40 00", hours: "24/7" },
+  },
+  {
+    country: "Germany",
+    hotline: { name: "Telefonseelsorge", number: "0800 111 0 111", hours: "24/7" },
+    textLine: { name: "Nummer gegen Kummer", number: "116 123", hours: "24/7" },
+  },
+  {
+    country: "Greece",
+    hotline: { name: "Suicide Help Greece", number: "1018", hours: "24/7" },
+    textLine: { name: "Klimaka NGO", number: "801 801 99 99", hours: "Mon-Fri 9am-9pm" },
+  },
+  {
+    country: "Hong Kong",
+    hotline: { name: "Samaritans Hong Kong", number: "2896 0000", hours: "24/7" },
+    textLine: { name: "Open Up Hotline", number: "2382 0000", hours: "24/7" },
+  },
+  {
+    country: "India",
+    hotline: { name: "AASRA", number: "91-22-27546669", hours: "24/7" },
+    textLine: { name: "Vandrevala Foundation", number: "1860 2662 345", hours: "24/7" },
+  },
+  {
+    country: "Indonesia",
+    hotline: { name: "Yayasan Pulih", number: "021-788-42580", hours: "Mon-Fri 10am-5pm" },
+    textLine: { name: "Into The Light", number: "Visit intothelightid.org", hours: "24/7 online" },
+  },
+  {
+    country: "Ireland",
+    hotline: { name: "Samaritans Ireland", number: "116 123", hours: "24/7" },
+    textLine: { name: "Pieta House", number: "1800 247 247", hours: "24/7" },
+  },
+  {
+    country: "Israel",
+    hotline: { name: "ERAN - Emotional First Aid", number: "1201", hours: "24/7" },
+    textLine: { name: "SAHAR Emotional Support Chat", number: "Visit sahar.org.il", hours: "24/7" },
+  },
+  {
+    country: "Italy",
+    hotline: { name: "Telefono Amico", number: "02 2327 2327", hours: "24/7" },
+    textLine: { name: "Samaritans Onlus", number: "800 86 00 22", hours: "1pm-10pm" },
+  },
+  {
+    country: "Japan",
+    hotline: { name: "TELL Lifeline", number: "03-5774-0992", hours: "9am-11pm daily" },
+    textLine: { name: "Inochi no Denwa", number: "0570-783-556", hours: "24/7" },
+  },
+  {
+    country: "Kenya",
+    hotline: { name: "Kenya Red Cross", number: "1199", hours: "24/7" },
+    textLine: { name: "Befrienders Kenya", number: "Visit befrienderskenya.org", hours: "24/7 online" },
+  },
+  {
+    country: "Malaysia",
+    hotline: { name: "Befrienders KL", number: "03-7627 2929", hours: "24/7" },
+    textLine: { name: "Talian Kasih", number: "15999", hours: "24/7" },
+  },
+  {
+    country: "Mexico",
+    hotline: { name: "Consejo Ciudadano", number: "55 5533 5533", hours: "24/7" },
+    textLine: { name: "SAPTEL", number: "55 5259 8121", hours: "24/7" },
+  },
+  {
+    country: "Netherlands",
+    hotline: { name: "113 Suicide Prevention", number: "0800-0113", hours: "24/7" },
+    textLine: { name: "Korrelatie", number: "0900-1450", hours: "24/7" },
+  },
+  {
+    country: "New Zealand",
+    hotline: { name: "Lifeline Aotearoa", number: "0800 543 354", hours: "24/7" },
+    textLine: { name: "1737 Text Support", number: "Text 1737", hours: "24/7" },
+  },
+  {
+    country: "Norway",
+    hotline: { name: "Kirkens SOS", number: "22 40 00 40", hours: "24/7" },
+    textLine: { name: "Mental Helse", number: "116 123", hours: "Mon-Sun 6pm-midnight" },
+  },
+  {
+    country: "Philippines",
+    hotline: { name: "NCMH Crisis Hotline", number: "(02) 7-989-8727", hours: "24/7" },
+    textLine: { name: "In Touch Community Services", number: "0917 800 1123", hours: "24/7" },
+  },
+  {
+    country: "Poland",
+    hotline: { name: "Telefon Zaufania", number: "116 123", hours: "24/7" },
+    textLine: { name: "Linia Wsparcia Emocjonalnego", number: "22 484 88 84", hours: "Mon-Fri 2pm-10pm" },
+  },
+  {
+    country: "Portugal",
+    hotline: { name: "SOS Voz Amiga", number: "21 354 45 45", hours: "4pm-midnight daily" },
+    textLine: { name: "Telefone da Amizade", number: "22 832 35 35", hours: "4pm-midnight daily" },
+  },
+  {
+    country: "Russia",
+    hotline: { name: "Samaritans Russia", number: "007 (495) 625-3101", hours: "24/7" },
+    textLine: { name: "Psychological Help", number: "8-800-2000-122", hours: "24/7" },
+  },
+  {
+    country: "Singapore",
+    hotline: { name: "Samaritans of Singapore", number: "1-767", hours: "24/7" },
+    textLine: { name: "Institute of Mental Health", number: "6389 2222", hours: "24/7" },
+  },
+  {
+    country: "South Africa",
+    hotline: { name: "SADAG", number: "0800 567 567", hours: "8am-8pm daily" },
+    textLine: { name: "Lifeline South Africa", number: "0861 322 322", hours: "24/7" },
+  },
+  {
+    country: "South Korea",
+    hotline: { name: "Korea Suicide Prevention Center", number: "1393", hours: "24/7" },
+    textLine: { name: "Mental Health Counseling", number: "1577-0199", hours: "24/7" },
+  },
+  {
+    country: "Spain",
+    hotline: { name: "Teléfono de la Esperanza", number: "717 003 717", hours: "24/7" },
+    textLine: { name: "Fundación ANAR", number: "900 20 20 10", hours: "24/7" },
+  },
+  {
+    country: "Sweden",
+    hotline: { name: "Mind - Självmordslinjen", number: "90101", hours: "24/7" },
+    textLine: { name: "Jourhavande Präst", number: "112", hours: "24/7" },
+  },
+  {
+    country: "Switzerland",
+    hotline: { name: "Die Dargebotene Hand", number: "143", hours: "24/7" },
+    textLine: { name: "Pro Juventute", number: "147", hours: "24/7" },
+  },
+  {
+    country: "Taiwan",
+    hotline: { name: "Lifeline Taiwan", number: "1995", hours: "24/7" },
+    textLine: { name: "Taiwan Suicide Prevention Center", number: "0800-788-995", hours: "24/7" },
+  },
+  {
+    country: "Thailand",
+    hotline: { name: "Department of Mental Health", number: "1323", hours: "24/7" },
+    textLine: { name: "Samaritans of Thailand", number: "(02) 713-6793", hours: "Daily 10am-10pm" },
+  },
+  {
+    country: "Turkey",
+    hotline: { name: "Yaşam Destek Hattı", number: "182", hours: "24/7" },
+    textLine: { name: "Mental Health Hotline", number: "444 63 66", hours: "24/7" },
+  },
+  {
+    country: "United Arab Emirates",
+    hotline: { name: "Dubai Community Health Centre", number: "04-344-7777", hours: "24/7" },
+    textLine: { name: "Priory Wellbeing Centre", number: "800-4673", hours: "Sun-Thu 8am-8pm" },
+  },
+  {
+    country: "United Kingdom",
+    hotline: { name: "Samaritans UK", number: "116 123", hours: "24/7" },
+    textLine: { name: "Shout Crisis Text Line", number: "Text SHOUT to 85258", hours: "24/7" },
+  },
+  {
+    country: "United States",
+    hotline: { name: "National Suicide Prevention Lifeline", number: "988", hours: "24/7" },
+    textLine: { name: "Crisis Text Line", number: "Text HOME to 741741", hours: "24/7" },
+  },
+  {
+    country: "Uruguay",
+    hotline: { name: "Apoyo Emocional", number: "*8483", hours: "24/7" },
+    textLine: { name: "Línea de Vida", number: "0800 0767", hours: "24/7" },
+  },
+  {
+    country: "Venezuela",
+    hotline: { name: "SADEC", number: "0241-8433308", hours: "Mon-Fri 8am-5pm" },
+    textLine: { name: "Emergency Services", number: "171", hours: "24/7" },
+  },
+];
+
 export default function Resources() {
+  const [selectedCountry, setSelectedCountry] = useState("United States");
+
+  const currentCrisis = crisisResources.find((r) => r.country === selectedCountry);
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-6">
@@ -257,27 +511,68 @@ export default function Resources() {
         </TabsContent>
       </Tabs>
 
-      <Card className="mt-8 bg-muted/30">
+      <Card className="mt-8 bg-destructive/5 border-destructive/20">
         <CardHeader>
-          <CardTitle>Crisis Resources</CardTitle>
+          <CardTitle className="text-destructive">Crisis Resources</CardTitle>
           <CardDescription>
             If you're in crisis or need immediate support, please reach out to these resources
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between p-3 rounded-lg border">
-            <div>
-              <p className="font-medium">National Suicide Prevention Lifeline</p>
-              <p className="text-sm text-muted-foreground">24/7 crisis support</p>
-            </div>
-            <p className="text-lg font-semibold">988</p>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Select Your Country</label>
+            <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+              <SelectTrigger className="w-full" data-testid="select-country">
+                <SelectValue placeholder="Select a country" />
+              </SelectTrigger>
+              <SelectContent>
+                {crisisResources.map((resource) => (
+                  <SelectItem key={resource.country} value={resource.country}>
+                    {resource.country}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="flex items-center justify-between p-3 rounded-lg border">
-            <div>
-              <p className="font-medium">Crisis Text Line</p>
-              <p className="text-sm text-muted-foreground">Text support available 24/7</p>
+
+          {currentCrisis && (
+            <div className="space-y-3 pt-2">
+              <div className="flex items-start gap-4 p-4 rounded-lg border border-destructive/20 bg-background">
+                <Phone className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-semibold text-foreground mb-1">
+                    {currentCrisis.hotline.name}
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {currentCrisis.hotline.hours}
+                  </p>
+                  <p className="text-lg font-bold text-destructive">
+                    {currentCrisis.hotline.number}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4 p-4 rounded-lg border border-destructive/20 bg-background">
+                <MessageSquare className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-semibold text-foreground mb-1">
+                    {currentCrisis.textLine.name}
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {currentCrisis.textLine.hours}
+                  </p>
+                  <p className="text-lg font-bold text-destructive">
+                    {currentCrisis.textLine.number}
+                  </p>
+                </div>
+              </div>
             </div>
-            <p className="text-lg font-semibold">Text HOME to 741741</p>
+          )}
+
+          <div className="pt-3 border-t border-destructive/10">
+            <p className="text-sm text-muted-foreground italic">
+              If you are experiencing a life-threatening emergency, please call your local emergency services (911, 999, 112, etc.) immediately.
+            </p>
           </div>
         </CardContent>
       </Card>
