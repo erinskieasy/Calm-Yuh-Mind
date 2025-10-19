@@ -28,12 +28,16 @@ const openai = new OpenAI({
 // Configure multer for file uploads
 const soundsDir = path.join(process.cwd(), "uploads", "sounds");
 const imagesDir = path.join(process.cwd(), "uploads", "journal-images");
+const voiceNotesDir = path.join(process.cwd(), "uploads", "voice-notes");
 
 if (!fs.existsSync(soundsDir)) {
   fs.mkdirSync(soundsDir, { recursive: true });
 }
 if (!fs.existsSync(imagesDir)) {
   fs.mkdirSync(imagesDir, { recursive: true });
+}
+if (!fs.existsSync(voiceNotesDir)) {
+  fs.mkdirSync(voiceNotesDir, { recursive: true });
 }
 
 const soundStorageConfig = multer.diskStorage({
@@ -82,6 +86,31 @@ const imageUpload = multer({
   },
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit for images
+  }
+});
+
+const voiceNoteStorageConfig = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, voiceNotesDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
+    cb(null, "voice-" + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const voiceNoteUpload = multer({
+  storage: voiceNoteStorageConfig,
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ["audio/webm", "audio/ogg", "audio/wav", "audio/mpeg", "audio/mp4"];
+    if (allowedTypes.includes(file.mimetype) || file.originalname.match(/\.(webm|ogg|wav|mp3|m4a)$/i)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only audio files are allowed"));
+    }
+  },
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit for voice notes
   }
 });
 
