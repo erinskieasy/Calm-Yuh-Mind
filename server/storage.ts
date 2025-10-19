@@ -90,12 +90,12 @@ export interface IStorage {
   getForums(): Promise<Forum[]>;
   getForumPosts(forumId: string): Promise<(ForumPost & { commentCount: number })[]>;
   getForumPost(id: string): Promise<ForumPost | undefined>;
-  createForumPost(post: InsertForumPost): Promise<ForumPost>;
+  createForumPost(post: InsertForumPost & { userId: string }): Promise<ForumPost>;
   deleteForumPost(id: string, userId: string): Promise<void>;
   flagForumPost(id: string, reason: string): Promise<void>;
   
   getForumComments(postId: string): Promise<ForumComment[]>;
-  createForumComment(comment: InsertForumComment): Promise<ForumComment>;
+  createForumComment(comment: InsertForumComment & { userId: string }): Promise<ForumComment>;
   deleteForumComment(id: string, userId: string): Promise<void>;
   flagForumComment(id: string, reason: string): Promise<void>;
 }
@@ -422,7 +422,7 @@ export class DatabaseStorage implements IStorage {
     return post;
   }
 
-  async createForumPost(insertPost: InsertForumPost): Promise<ForumPost> {
+  async createForumPost(insertPost: InsertForumPost & { userId: string }): Promise<ForumPost> {
     const [post] = await db
       .insert(forumPosts)
       .values(insertPost)
@@ -454,7 +454,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(forumComments.createdAt);
   }
 
-  async createForumComment(insertComment: InsertForumComment): Promise<ForumComment> {
+  async createForumComment(insertComment: InsertForumComment & { userId: string }): Promise<ForumComment> {
     const [comment] = await db
       .insert(forumComments)
       .values(insertComment)

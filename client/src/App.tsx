@@ -24,7 +24,8 @@ import FindTherapists from "@/pages/find-therapists";
 import Resources from "@/pages/resources";
 import MiniGames from "@/pages/mini-games";
 import Settings from "@/pages/settings";
-import AnonForum from "@/pages/anon-forum";
+import Forum from "@/pages/forum";
+import ForumDetail from "@/pages/forum-detail";
 import NotFound from "@/pages/not-found";
 import flowerPfp from "@assets/Flower Pfp_1760870955852.jpg";
 import leafPfp from "@assets/Leaf Pfp_1760870955897.jpg";
@@ -62,7 +63,8 @@ function Router() {
       <Route path="/find-therapists" component={FindTherapists} />
       <Route path="/resources" component={Resources} />
       <Route path="/mini-games" component={MiniGames} />
-      <Route path="/anon-forum" component={AnonForum} />
+      <Route path="/forum" component={Forum} />
+      <Route path="/forum/:forumId" component={ForumDetail} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
