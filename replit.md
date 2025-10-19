@@ -47,7 +47,12 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
 - **Meditation & Breathing**: Guided exercises with interactive timers and session tracking.
 - **Soothing Sounds**: 6 ambient soundscapes (Ocean Waves, Rainfall, Wind Chimes, Crackling Fire, White Noise, Nature Sounds) plus custom MP3 upload feature with volume control, persistent player, and continuous playback across all pages via global audio context. User-isolated storage with 50MB file limit.
 - **Mini Games**: Four calming, wellness-focused games for mindful breaks: Memory Match (peaceful icon matching to improve focus), Breathing Rhythm (follow breathing patterns to calm the mind), Mindful Bubbles (pop bubbles to release stress), and Tic Tac Toe (strategic thinking against AI with score tracking). Each game tracks progress and provides relaxing interactions.
-- **Settings**: User preferences page with custom gradient theme selection. Four themes available (Default, Midnight Breeze, Tropical Sunset, Meadow Fields) with visual gradient previews and color samples. Theme selection persists across sessions via localStorage and transforms entire app appearance including backgrounds, accents, cards, sidebar, and all UI elements.
+- **Settings**: Comprehensive user preferences page with multiple customization options:
+  - **Profile Pictures**: 5 preset emoji avatars (Happy 😊, Flower 🌸, Ocean 🌊, Nature 🌿, Star ⭐) stored in user database
+  - **Font Styles**: 4 font options including Inter (default), Georgia (serif), Comic Sans (playful), and OpenDyslexic (dyslexia-friendly with enhanced spacing)
+  - **Color Themes**: 4 gradient themes with increased saturation (Default sage/blue, Midnight Breeze blue, Tropical Sunset orange/red, Meadow Fields green)
+  - **Account**: Logout functionality
+  - All preferences persist via localStorage (fonts/themes) or database (profile pictures)
 - **Self-Assessment Tools**: 
   - **Depression**: PHQ-9 (9 questions, 5-level severity)
   - **Anxiety**: GAD-7 (7 questions, 4-level severity)
