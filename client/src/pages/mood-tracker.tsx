@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Smile, Frown, Meh, Laugh, Angry } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Smile, Frown, Meh, Laugh, Angry, Calendar as CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { MoodEntry, InsertMoodEntry } from "@shared/schema";
@@ -66,15 +67,23 @@ function Bubble({ Icon, color, delay }: BubbleProps) {
 }
 
 export default function MoodTracker() {
+  const currentDate = new Date();
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [intensity, setIntensity] = useState(3);
   const [note, setNote] = useState("");
   const [showBubbles, setShowBubbles] = useState(false);
   const [bubbleMood, setBubbleMood] = useState<{ icon: LucideIcon; color: string } | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
   const { toast } = useToast();
 
   const { data: moodEntries = [], isLoading } = useQuery<MoodEntry[]>({
-    queryKey: ["/api/moods"],
+    queryKey: ["/api/moods", selectedMonth, selectedYear],
+    queryFn: async () => {
+      const response = await fetch(`/api/moods?month=${selectedMonth}&year=${selectedYear}`);
+      if (!response.ok) throw new Error("Failed to fetch moods");
+      return response.json();
+    },
   });
 
   const createMood = useMutation({
@@ -89,7 +98,7 @@ export default function MoodTracker() {
         setTimeout(() => setShowBubbles(false), 2500);
       }
       
-      queryClient.invalidateQueries({ queryKey: ["/api/moods"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/moods", selectedMonth, selectedYear] });
       toast({
         title: "Mood logged",
         description: "Your mood has been recorded successfully.",
@@ -112,11 +121,57 @@ export default function MoodTracker() {
     });
   };
 
-  const last30Days = Array.from({ length: 30 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (29 - i));
-    return date.toISOString().split("T")[0];
-  });
+  // Calculate days for selected month
+  const daysInSelectedMonth = useMemo(() => {
+    const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+    return Array.from({ length: daysInMonth }, (_, i) => {
+      const date = new Date(selectedYear, selectedMonth - 1, i + 1);
+      return date.toISOString().split("T")[0];
+    });
+  }, [selectedMonth, selectedYear]);
+
+  // Calculate statistics for selected month
+  const monthStats = useMemo(() => {
+    const moodCounts: Record<string, number> = {};
+    let totalIntensity = 0;
+    
+    moodEntries.forEach((entry) => {
+      moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1;
+      totalIntensity += entry.intensity;
+    });
+
+    const totalEntries = moodEntries.length;
+    const avgIntensity = totalEntries > 0 ? (totalIntensity / totalEntries).toFixed(1) : "0";
+    const mostFrequentMood = Object.entries(moodCounts).sort(([, a], [, b]) => b - a)[0]?.[0];
+
+    return {
+      totalEntries,
+      avgIntensity,
+      mostFrequentMood,
+      moodCounts,
+    };
+  }, [moodEntries]);
+
+  // Generate years for selector (current year and past 5 years)
+  const years = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 6 }, (_, i) => currentYear - i);
+  }, []);
+
+  const months = [
+    { value: 1, label: "January" },
+    { value: 2, label: "February" },
+    { value: 3, label: "March" },
+    { value: 4, label: "April" },
+    { value: 5, label: "May" },
+    { value: 6, label: "June" },
+    { value: 7, label: "July" },
+    { value: 8, label: "August" },
+    { value: 9, label: "September" },
+    { value: 10, label: "October" },
+    { value: 11, label: "November" },
+    { value: 12, label: "December" },
+  ];
 
   return (
     <div className="space-y-8">
@@ -227,9 +282,74 @@ export default function MoodTracker() {
       </Card>
 
       <Card className="p-6">
-        <CardHeader className="px-0 pt-0">
-          <CardTitle className="text-xl font-display">Mood Calendar</CardTitle>
-          <p className="text-sm text-muted-foreground">Last 30 days</p>
+        <CardHeader className="px-0 pt-0 space-y-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <CardTitle className="text-xl font-display flex items-center gap-2">
+                <CalendarIcon className="w-5 h-5" />
+                Mood Calendar
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                View your mood history
+              </p>
+            </div>
+            <div className="flex gap-2 items-center flex-wrap">
+              <Select
+                value={selectedMonth.toString()}
+                onValueChange={(value) => setSelectedMonth(parseInt(value))}
+              >
+                <SelectTrigger className="w-36" data-testid="select-month">
+                  <SelectValue placeholder="Select month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {months.map((month) => (
+                    <SelectItem key={month.value} value={month.value.toString()}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={selectedYear.toString()}
+                onValueChange={(value) => setSelectedYear(parseInt(value))}
+              >
+                <SelectTrigger className="w-28" data-testid="select-year">
+                  <SelectValue placeholder="Select year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Statistics for selected month */}
+          {!isLoading && monthStats.totalEntries > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Total Entries</p>
+                <p className="text-2xl font-semibold" data-testid="text-total-entries">
+                  {monthStats.totalEntries}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Avg. Intensity</p>
+                <p className="text-2xl font-semibold" data-testid="text-avg-intensity">
+                  {monthStats.avgIntensity}/5
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Most Frequent</p>
+                <p className="text-2xl font-semibold capitalize" data-testid="text-most-frequent">
+                  {monthStats.mostFrequentMood || "—"}
+                </p>
+              </div>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="px-0 pb-0">
           {isLoading ? (
@@ -237,26 +357,41 @@ export default function MoodTracker() {
               <p className="text-muted-foreground">Loading...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-7 md:grid-cols-10 gap-2">
-              {last30Days.map((date) => {
+            <div className="grid grid-cols-7 gap-2">
+              {daysInSelectedMonth.map((date) => {
                 const dayMood = moodEntries.find((m) => m.date === date);
                 const moodConfig = moods.find((m) => m.name === dayMood?.mood);
+                const dayOfWeek = new Date(date).getDay();
+                
                 return (
                   <div
                     key={date}
-                    className="aspect-square rounded-lg flex items-center justify-center text-xs"
+                    className="aspect-square rounded-lg flex flex-col items-center justify-center text-xs gap-0.5 hover-elevate transition-all"
                     style={{
                       backgroundColor: dayMood
                         ? `${moodConfig?.color}40`
                         : "hsl(var(--muted))",
                     }}
-                    title={date}
+                    title={`${date}${dayMood ? ` - ${moodConfig?.label} (${dayMood.intensity}/5)` : ""}`}
                     data-testid={`calendar-day-${date}`}
                   >
-                    {new Date(date).getDate()}
+                    <span className="font-medium">{new Date(date).getDate()}</span>
+                    {dayMood && moodConfig && (
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: moodConfig.color }}
+                      />
+                    )}
                   </div>
                 );
               })}
+            </div>
+          )}
+          
+          {!isLoading && monthStats.totalEntries === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>No mood entries for this month yet.</p>
+              <p className="text-sm mt-1">Start tracking your mood above!</p>
             </div>
           )}
         </CardContent>
