@@ -32,12 +32,6 @@ export const defaultTracks: Track[] = [
     audioSrc: rainAudio,
   },
   {
-    id: "forest",
-    name: "Forest Ambience",
-    description: "Birds chirping in the woods",
-    color: "hsl(160, 45%, 65%)",
-  },
-  {
     id: "wind-chimes",
     name: "Wind Chimes",
     description: "Peaceful chimes in the breeze",
