@@ -13,13 +13,201 @@ import {
 import { Search, ExternalLink, MapPin } from "lucide-react";
 
 const countries = [
-  { value: "us", label: "United States" },
-  { value: "ca", label: "Canada" },
-  { value: "uk", label: "United Kingdom" },
+  { value: "af", label: "Afghanistan" },
+  { value: "al", label: "Albania" },
+  { value: "dz", label: "Algeria" },
+  { value: "ad", label: "Andorra" },
+  { value: "ao", label: "Angola" },
+  { value: "ag", label: "Antigua and Barbuda" },
+  { value: "ar", label: "Argentina" },
+  { value: "am", label: "Armenia" },
   { value: "au", label: "Australia" },
-  { value: "nz", label: "New Zealand" },
+  { value: "at", label: "Austria" },
+  { value: "az", label: "Azerbaijan" },
+  { value: "bs", label: "Bahamas" },
+  { value: "bh", label: "Bahrain" },
+  { value: "bd", label: "Bangladesh" },
+  { value: "bb", label: "Barbados" },
+  { value: "by", label: "Belarus" },
+  { value: "be", label: "Belgium" },
+  { value: "bz", label: "Belize" },
+  { value: "bj", label: "Benin" },
+  { value: "bt", label: "Bhutan" },
+  { value: "bo", label: "Bolivia" },
+  { value: "ba", label: "Bosnia and Herzegovina" },
+  { value: "bw", label: "Botswana" },
+  { value: "br", label: "Brazil" },
+  { value: "bn", label: "Brunei" },
+  { value: "bg", label: "Bulgaria" },
+  { value: "bf", label: "Burkina Faso" },
+  { value: "bi", label: "Burundi" },
+  { value: "cv", label: "Cabo Verde" },
+  { value: "kh", label: "Cambodia" },
+  { value: "cm", label: "Cameroon" },
+  { value: "ca", label: "Canada" },
+  { value: "cf", label: "Central African Republic" },
+  { value: "td", label: "Chad" },
+  { value: "cl", label: "Chile" },
+  { value: "cn", label: "China" },
+  { value: "co", label: "Colombia" },
+  { value: "km", label: "Comoros" },
+  { value: "cg", label: "Congo" },
+  { value: "cd", label: "Congo (Democratic Republic)" },
+  { value: "cr", label: "Costa Rica" },
+  { value: "hr", label: "Croatia" },
+  { value: "cu", label: "Cuba" },
+  { value: "cy", label: "Cyprus" },
+  { value: "cz", label: "Czech Republic" },
+  { value: "dk", label: "Denmark" },
+  { value: "dj", label: "Djibouti" },
+  { value: "dm", label: "Dominica" },
+  { value: "do", label: "Dominican Republic" },
+  { value: "ec", label: "Ecuador" },
+  { value: "eg", label: "Egypt" },
+  { value: "sv", label: "El Salvador" },
+  { value: "gq", label: "Equatorial Guinea" },
+  { value: "er", label: "Eritrea" },
+  { value: "ee", label: "Estonia" },
+  { value: "sz", label: "Eswatini" },
+  { value: "et", label: "Ethiopia" },
+  { value: "fj", label: "Fiji" },
+  { value: "fi", label: "Finland" },
+  { value: "fr", label: "France" },
+  { value: "ga", label: "Gabon" },
+  { value: "gm", label: "Gambia" },
+  { value: "ge", label: "Georgia" },
+  { value: "de", label: "Germany" },
+  { value: "gh", label: "Ghana" },
+  { value: "gr", label: "Greece" },
+  { value: "gd", label: "Grenada" },
+  { value: "gt", label: "Guatemala" },
+  { value: "gn", label: "Guinea" },
+  { value: "gw", label: "Guinea-Bissau" },
+  { value: "gy", label: "Guyana" },
+  { value: "ht", label: "Haiti" },
+  { value: "hn", label: "Honduras" },
+  { value: "hu", label: "Hungary" },
+  { value: "is", label: "Iceland" },
+  { value: "in", label: "India" },
+  { value: "id", label: "Indonesia" },
+  { value: "ir", label: "Iran" },
+  { value: "iq", label: "Iraq" },
   { value: "ie", label: "Ireland" },
-  { value: "other", label: "Other" },
+  { value: "il", label: "Israel" },
+  { value: "it", label: "Italy" },
+  { value: "jm", label: "Jamaica" },
+  { value: "jp", label: "Japan" },
+  { value: "jo", label: "Jordan" },
+  { value: "kz", label: "Kazakhstan" },
+  { value: "ke", label: "Kenya" },
+  { value: "ki", label: "Kiribati" },
+  { value: "kp", label: "Korea (North)" },
+  { value: "kr", label: "Korea (South)" },
+  { value: "kw", label: "Kuwait" },
+  { value: "kg", label: "Kyrgyzstan" },
+  { value: "la", label: "Laos" },
+  { value: "lv", label: "Latvia" },
+  { value: "lb", label: "Lebanon" },
+  { value: "ls", label: "Lesotho" },
+  { value: "lr", label: "Liberia" },
+  { value: "ly", label: "Libya" },
+  { value: "li", label: "Liechtenstein" },
+  { value: "lt", label: "Lithuania" },
+  { value: "lu", label: "Luxembourg" },
+  { value: "mg", label: "Madagascar" },
+  { value: "mw", label: "Malawi" },
+  { value: "my", label: "Malaysia" },
+  { value: "mv", label: "Maldives" },
+  { value: "ml", label: "Mali" },
+  { value: "mt", label: "Malta" },
+  { value: "mh", label: "Marshall Islands" },
+  { value: "mr", label: "Mauritania" },
+  { value: "mu", label: "Mauritius" },
+  { value: "mx", label: "Mexico" },
+  { value: "fm", label: "Micronesia" },
+  { value: "md", label: "Moldova" },
+  { value: "mc", label: "Monaco" },
+  { value: "mn", label: "Mongolia" },
+  { value: "me", label: "Montenegro" },
+  { value: "ma", label: "Morocco" },
+  { value: "mz", label: "Mozambique" },
+  { value: "mm", label: "Myanmar" },
+  { value: "na", label: "Namibia" },
+  { value: "nr", label: "Nauru" },
+  { value: "np", label: "Nepal" },
+  { value: "nl", label: "Netherlands" },
+  { value: "nz", label: "New Zealand" },
+  { value: "ni", label: "Nicaragua" },
+  { value: "ne", label: "Niger" },
+  { value: "ng", label: "Nigeria" },
+  { value: "mk", label: "North Macedonia" },
+  { value: "no", label: "Norway" },
+  { value: "om", label: "Oman" },
+  { value: "pk", label: "Pakistan" },
+  { value: "pw", label: "Palau" },
+  { value: "ps", label: "Palestine" },
+  { value: "pa", label: "Panama" },
+  { value: "pg", label: "Papua New Guinea" },
+  { value: "py", label: "Paraguay" },
+  { value: "pe", label: "Peru" },
+  { value: "ph", label: "Philippines" },
+  { value: "pl", label: "Poland" },
+  { value: "pt", label: "Portugal" },
+  { value: "qa", label: "Qatar" },
+  { value: "ro", label: "Romania" },
+  { value: "ru", label: "Russia" },
+  { value: "rw", label: "Rwanda" },
+  { value: "kn", label: "Saint Kitts and Nevis" },
+  { value: "lc", label: "Saint Lucia" },
+  { value: "vc", label: "Saint Vincent and the Grenadines" },
+  { value: "ws", label: "Samoa" },
+  { value: "sm", label: "San Marino" },
+  { value: "st", label: "Sao Tome and Principe" },
+  { value: "sa", label: "Saudi Arabia" },
+  { value: "sn", label: "Senegal" },
+  { value: "rs", label: "Serbia" },
+  { value: "sc", label: "Seychelles" },
+  { value: "sl", label: "Sierra Leone" },
+  { value: "sg", label: "Singapore" },
+  { value: "sk", label: "Slovakia" },
+  { value: "si", label: "Slovenia" },
+  { value: "sb", label: "Solomon Islands" },
+  { value: "so", label: "Somalia" },
+  { value: "za", label: "South Africa" },
+  { value: "ss", label: "South Sudan" },
+  { value: "es", label: "Spain" },
+  { value: "lk", label: "Sri Lanka" },
+  { value: "sd", label: "Sudan" },
+  { value: "sr", label: "Suriname" },
+  { value: "se", label: "Sweden" },
+  { value: "ch", label: "Switzerland" },
+  { value: "sy", label: "Syria" },
+  { value: "tw", label: "Taiwan" },
+  { value: "tj", label: "Tajikistan" },
+  { value: "tz", label: "Tanzania" },
+  { value: "th", label: "Thailand" },
+  { value: "tl", label: "Timor-Leste" },
+  { value: "tg", label: "Togo" },
+  { value: "to", label: "Tonga" },
+  { value: "tt", label: "Trinidad and Tobago" },
+  { value: "tn", label: "Tunisia" },
+  { value: "tr", label: "Turkey" },
+  { value: "tm", label: "Turkmenistan" },
+  { value: "tv", label: "Tuvalu" },
+  { value: "ug", label: "Uganda" },
+  { value: "ua", label: "Ukraine" },
+  { value: "ae", label: "United Arab Emirates" },
+  { value: "uk", label: "United Kingdom" },
+  { value: "us", label: "United States" },
+  { value: "uy", label: "Uruguay" },
+  { value: "uz", label: "Uzbekistan" },
+  { value: "vu", label: "Vanuatu" },
+  { value: "va", label: "Vatican City" },
+  { value: "ve", label: "Venezuela" },
+  { value: "vn", label: "Vietnam" },
+  { value: "ye", label: "Yemen" },
+  { value: "zm", label: "Zambia" },
+  { value: "zw", label: "Zimbabwe" },
 ];
 
 const usStates = [
@@ -51,7 +239,6 @@ export default function FindTherapists() {
   const [country, setCountry] = useState("");
   const [stateProvince, setStateProvince] = useState("");
   const [city, setCity] = useState("");
-  const [customLocation, setCustomLocation] = useState("");
 
   const getRegionOptions = () => {
     switch (country) {
@@ -79,25 +266,19 @@ export default function FindTherapists() {
       case "au":
         return "State/Territory";
       default:
-        return "State/Province";
+        return "State/Province/Region";
     }
   };
 
   const handleSearch = () => {
-    let location = "";
+    const parts = [];
+    if (city) parts.push(city);
+    if (stateProvince) parts.push(stateProvince);
     
-    if (country === "other") {
-      location = customLocation;
-    } else {
-      const parts = [];
-      if (city) parts.push(city);
-      if (stateProvince) parts.push(stateProvince);
-      
-      const countryName = countries.find(c => c.value === country)?.label;
-      if (countryName && countryName !== "Other") parts.push(countryName);
-      
-      location = parts.join(", ");
-    }
+    const countryName = countries.find(c => c.value === country)?.label;
+    if (countryName) parts.push(countryName);
+    
+    const location = parts.join(", ");
 
     if (!location.trim()) {
       return;
@@ -112,17 +293,18 @@ export default function FindTherapists() {
   };
 
   const isSearchDisabled = () => {
-    if (country === "other") {
-      return !customLocation.trim();
+    // For countries with regions, require region selection
+    if (getRegionOptions().length > 0) {
+      return !country || !stateProvince;
     }
-    return !country || !stateProvince;
+    // For other countries, just require country
+    return !country;
   };
 
   const resetForm = () => {
     setCountry("");
     setStateProvince("");
     setCity("");
-    setCustomLocation("");
   };
 
   return (
@@ -161,7 +343,7 @@ export default function FindTherapists() {
             </Select>
           </div>
 
-          {country && country !== "other" && getRegionOptions().length > 0 && (
+          {country && getRegionOptions().length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="state-province">{getRegionLabel()} *</Label>
               <Select value={stateProvince} onValueChange={setStateProvince}>
@@ -179,32 +361,23 @@ export default function FindTherapists() {
             </div>
           )}
 
-          {country && country !== "other" && (
+          {country && (
             <div className="space-y-2">
-              <Label htmlFor="city">City (Optional)</Label>
+              <Label htmlFor="city">
+                City {getRegionOptions().length > 0 ? "(Optional)" : "*"}
+              </Label>
               <Input
                 id="city"
-                placeholder="e.g., Los Angeles, Toronto, London"
+                placeholder="e.g., Los Angeles, Toronto, London, Paris"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 data-testid="input-city"
               />
-            </div>
-          )}
-
-          {country === "other" && (
-            <div className="space-y-2">
-              <Label htmlFor="custom-location">Location *</Label>
-              <Input
-                id="custom-location"
-                placeholder="e.g., Paris, France or Tokyo, Japan"
-                value={customLocation}
-                onChange={(e) => setCustomLocation(e.target.value)}
-                data-testid="input-custom-location"
-              />
-              <p className="text-sm text-muted-foreground">
-                Enter your city and country
-              </p>
+              {getRegionOptions().length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Enter your city or region
+                </p>
+              )}
             </div>
           )}
 
@@ -240,7 +413,7 @@ export default function FindTherapists() {
             </div>
             <div>
               <p className="font-medium text-foreground">Select Your Location</p>
-              <p>Choose your country, state/province, and optionally your city</p>
+              <p>Choose your country. For US, Canada, UK, and Australia, also select your state/province/region. Add city for more specific results.</p>
             </div>
           </div>
           <div className="flex gap-3">
