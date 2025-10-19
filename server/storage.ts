@@ -37,7 +37,7 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
 
   // User-specific data operations
-  getMoodEntries(userId: string): Promise<MoodEntry[]>;
+  getMoodEntries(userId: string, month?: number, year?: number): Promise<MoodEntry[]>;
   createMoodEntry(entry: InsertMoodEntry): Promise<MoodEntry>;
 
   getJournalEntries(userId: string): Promise<JournalEntry[]>;
@@ -102,12 +102,40 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Mood entries
-  async getMoodEntries(userId: string): Promise<MoodEntry[]> {
-    return await db
+  async getMoodEntries(userId: string, month?: number, year?: number): Promise<MoodEntry[]> {
+    let query = db
       .select()
       .from(moodEntries)
-      .where(eq(moodEntries.userId, userId))
-      .orderBy(desc(moodEntries.createdAt));
+      .where(eq(moodEntries.userId, userId));
+
+    // If month and year are provided, filter by date range
+    if (month !== undefined && year !== undefined) {
+      // Create start and end dates for the month
+      const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
+      const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+      
+      query = query.where(
+        and(
+          eq(moodEntries.userId, userId),
+          sql`${moodEntries.date} >= ${startDate}`,
+          sql`${moodEntries.date} <= ${endDate}`
+        )
+      );
+    } else if (year !== undefined) {
+      // If only year is provided, filter by year
+      const startDate = new Date(year, 0, 1).toISOString().split('T')[0];
+      const endDate = new Date(year, 11, 31).toISOString().split('T')[0];
+      
+      query = query.where(
+        and(
+          eq(moodEntries.userId, userId),
+          sql`${moodEntries.date} >= ${startDate}`,
+          sql`${moodEntries.date} <= ${endDate}`
+        )
+      );
+    }
+
+    return await query.orderBy(desc(moodEntries.createdAt));
   }
 
   async createMoodEntry(insertEntry: InsertMoodEntry): Promise<MoodEntry> {
