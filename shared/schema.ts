@@ -127,6 +127,40 @@ export const customSounds = pgTable("custom_sounds", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Forums - Anonymous discussion boards
+export const forums = pgTable("forums", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Forum posts - Anonymous entries users can create
+export const forumPosts = pgTable("forum_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  forumId: varchar("forum_id").notNull().references(() => forums.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  isFlagged: boolean("is_flagged").default(false).notNull(),
+  flagReason: text("flag_reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Forum comments - Anonymous comments on posts
+export const forumComments = pgTable("forum_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull().references(() => forumPosts.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  isFlagged: boolean("is_flagged").default(false).notNull(),
+  flagReason: text("flag_reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   moodEntries: many(moodEntries),
@@ -138,6 +172,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   sentConsultationRequests: many(consultationRequests, { relationName: "clientRequests" }),
   receivedConsultationRequests: many(consultationRequests, { relationName: "therapistRequests" }),
   customSounds: many(customSounds),
+  forumPosts: many(forumPosts),
+  forumComments: many(forumComments),
 }));
 
 export const moodEntriesRelations = relations(moodEntries, ({ one }) => ({
@@ -198,6 +234,33 @@ export const consultationRequestsRelations = relations(consultationRequests, ({ 
 export const customSoundsRelations = relations(customSounds, ({ one }) => ({
   user: one(users, {
     fields: [customSounds.userId],
+    references: [users.id],
+  }),
+}));
+
+export const forumsRelations = relations(forums, ({ many }) => ({
+  posts: many(forumPosts),
+}));
+
+export const forumPostsRelations = relations(forumPosts, ({ one, many }) => ({
+  forum: one(forums, {
+    fields: [forumPosts.forumId],
+    references: [forums.id],
+  }),
+  user: one(users, {
+    fields: [forumPosts.userId],
+    references: [users.id],
+  }),
+  comments: many(forumComments),
+}));
+
+export const forumCommentsRelations = relations(forumComments, ({ one }) => ({
+  post: one(forumPosts, {
+    fields: [forumComments.postId],
+    references: [forumPosts.id],
+  }),
+  user: one(users, {
+    fields: [forumComments.userId],
     references: [users.id],
   }),
 }));
@@ -265,6 +328,24 @@ export const insertCustomSoundSchema = createInsertSchema(customSounds).omit({
   createdAt: true,
 });
 
+export const insertForumPostSchema = createInsertSchema(forumPosts).omit({
+  id: true,
+  userId: true,
+  isFlagged: true,
+  flagReason: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertForumCommentSchema = createInsertSchema(forumComments).omit({
+  id: true,
+  userId: true,
+  isFlagged: true,
+  flagReason: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
 
@@ -292,3 +373,9 @@ export type ConsultationRequest = typeof consultationRequests.$inferSelect;
 
 export type InsertCustomSound = z.infer<typeof insertCustomSoundSchema>;
 export type CustomSound = typeof customSounds.$inferSelect;
+
+export type Forum = typeof forums.$inferSelect;
+export type InsertForumPost = z.infer<typeof insertForumPostSchema>;
+export type ForumPost = typeof forumPosts.$inferSelect;
+export type InsertForumComment = z.infer<typeof insertForumCommentSchema>;
+export type ForumComment = typeof forumComments.$inferSelect;

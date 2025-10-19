@@ -70,8 +70,8 @@ const wellnessItems = [
 
 const communityItems = [
   {
-    title: "Anon Message Forum",
-    url: "/anon-forum",
+    title: "Forum",
+    url: "/forum",
     icon: MessageSquare,
   },
 ];
