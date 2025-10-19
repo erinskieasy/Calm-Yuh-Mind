@@ -35,10 +35,11 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
 
 ### Feature Specifications
 - **Dashboard**: Real-time statistics, 7-day mood trend.
-- **Mood Tracker**: Log daily moods with intensity, notes, and a 30-day visual calendar.
+- **Mood Tracker**: Log daily moods with intensity, notes, and a 30-day visual calendar with daily averaging. When multiple moods are logged on the same day, the system calculates a weighted average based on mood values (joyful=5, calm=4, neutral=3, anxious=2, sad=1) and intensities. Calendar displays the average mood with color coding and entry count badges. Dialog shows both daily average and all individual entries with timestamps.
 - **Digital Journal**: Rich HTML editor powered by Tiptap with full formatting capabilities (bold, italic, underline, headings, lists, alignment), image upload support (10MB limit, JPEG/PNG/GIF/WebP), and chronological timeline display.
 - **Meditation & Breathing**: Guided exercises with interactive timers and session tracking.
 - **Soothing Sounds**: 5 ambient soundscapes (Ocean Waves, Rainfall, Wind Chimes, Crackling Fire, White Noise) plus custom MP3 upload feature with volume control, persistent player, and continuous playback across all pages via global audio context. User-isolated storage with 50MB file limit.
+- **Mini Games**: Three calming, wellness-focused games for mindful breaks: Memory Match (peaceful icon matching to improve focus), Breathing Rhythm (follow breathing patterns to calm the mind), and Mindful Bubbles (pop bubbles to release stress). Each game tracks progress and provides relaxing interactions.
 - **Settings**: User preferences page with custom gradient theme selection. Four themes available (Default, Midnight Breeze, Tropical Sunset, Meadow Fields) with visual gradient previews and color samples. Theme selection persists across sessions via localStorage and transforms entire app appearance including backgrounds, accents, cards, sidebar, and all UI elements.
 - **Self-Assessment Tools**: 
   - **Depression**: PHQ-9 (9 questions, 5-level severity)
