@@ -21,6 +21,7 @@ import Assessment from "@/pages/assessment";
 import Sounds from "@/pages/sounds";
 import TherapistProfile from "@/pages/therapist-profile";
 import FindTherapists from "@/pages/find-therapists";
+import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -46,6 +47,7 @@ function Router() {
       <Route path="/sounds" component={Sounds} />
       <Route path="/therapist-profile" component={TherapistProfile} />
       <Route path="/find-therapists" component={FindTherapists} />
+      <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -59,7 +61,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light">
+      <ThemeProvider defaultTheme="default">
         <AudioProvider>
           <TooltipProvider>
             <AuthenticatedApp style={style} />

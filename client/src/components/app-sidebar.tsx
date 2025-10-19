@@ -8,6 +8,7 @@ import {
   Music,
   UserCircle,
   Search,
+  Settings,
 } from "lucide-react";
 import {
   Sidebar,
@@ -73,6 +74,14 @@ const professionalItems = [
   },
 ];
 
+const settingsItems = [
+  {
+    title: "Settings",
+    url: "/settings",
+    icon: Settings,
+  },
+];
+
 export function AppSidebar() {
   const [location] = useLocation();
 
@@ -112,6 +121,28 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {professionalItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location === item.url}
+                    data-testid={`link-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
+                    <Link href={item.url}>
+                      <item.icon className="h-5 w-5" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Preferences</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {settingsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild

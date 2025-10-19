@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark";
+type Theme = "default" | "midnight-breeze" | "tropical-sunset" | "meadow-fields" | "light" | "dark";
 
 type ThemeProviderProps = {
   children: React.ReactNode;
@@ -18,7 +18,7 @@ const ThemeProviderContext = createContext<ThemeProviderState | undefined>(
 
 export function ThemeProvider({
   children,
-  defaultTheme = "light",
+  defaultTheme = "default",
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem("theme") as Theme) || defaultTheme
@@ -26,9 +26,19 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove("light", "dark");
-    root.classList.add(theme);
-    localStorage.setItem("theme", theme);
+    
+    // Remove all theme classes
+    root.classList.remove("default", "midnight-breeze", "tropical-sunset", "meadow-fields", "light", "dark");
+    
+    // Handle legacy light/dark themes
+    if (theme === "light" || theme === "dark") {
+      root.classList.add("default");
+      localStorage.setItem("theme", "default");
+      setTheme("default");
+    } else {
+      root.classList.add(theme);
+      localStorage.setItem("theme", theme);
+    }
   }, [theme]);
 
   return (
