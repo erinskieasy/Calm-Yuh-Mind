@@ -66,7 +66,7 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
   - **Category Organization**: Assessments grouped by mental health domain
 
 ### System Design Choices
-- **Data Isolation**: All user data (moods, journals, assessments, chat history, meditation sessions, therapist profiles, custom sounds, uploaded images) is scoped to authenticated users.
+- **Data Isolation**: All user data (moods, journals, assessments, chat history, meditation sessions, custom sounds, uploaded images) is scoped to authenticated users.
 - **Validation**: Zod schemas used for data validation.
 - **Modularity**: Project structure separates client, server, and shared components.
 - **File Storage**: Uploaded files stored in `uploads/sounds/`, `uploads/journal-images/`, and `uploads/profile-pictures/` directories with automatic cleanup on deletion.

@@ -7,7 +7,6 @@ import {
   ClipboardList,
   Music,
   Gamepad2,
-  UserCircle,
   Search,
   Settings,
   MessageSquare,
@@ -81,11 +80,6 @@ const professionalItems = [
     title: "Find Therapists",
     url: "/find-therapists",
     icon: Search,
-  },
-  {
-    title: "Therapist Profile",
-    url: "/therapist-profile",
-    icon: UserCircle,
   },
 ];
 
