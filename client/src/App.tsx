@@ -21,7 +21,7 @@ import Assessment from "@/pages/assessment";
 import Sounds from "@/pages/sounds";
 import TherapistProfile from "@/pages/therapist-profile";
 import FindTherapists from "@/pages/find-therapists";
-import MiniGames from "@/pages/mini-games-simple";
+import MiniGames from "@/pages/mini-games";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
