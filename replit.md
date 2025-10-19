@@ -25,7 +25,7 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
 - **Authentication**: Replit Auth integration supporting multiple providers (Google, GitHub, X, Apple, email/password) with secure, session-based authentication persisted in PostgreSQL. All application features require authentication, and user data is isolated.
 - **AI Integration**: OpenAI API (GPT-4o-mini) via Replit AI Integrations for a compassionate AI companion, with conversation history persistence.
 - **Assessment Tools**: Comprehensive collection of 6 validated mental health screening tools (PHQ-9, GAD-7, PSS-10, Rosenberg Self-Esteem, UCLA Loneliness, PCL-5 Short) with randomized question presentation, auto-advancing flows, color-coded score interpretation, proper reverse scoring, and historical tracking.
-- **Therapist Directory**: Location-based Google search integration with country, state/province, and city selection. Users select their location from dropdowns (US states, Canadian provinces, UK regions, Australian states, or custom location), and the app constructs a Google search query for "therapists OR psychiatrists OR mental health counselors" in the selected area, opening results in a new tab. No API required - simple, effective search assistance.
+- **Therapist Directory**: Interactive OpenStreetMap-based therapist finder with live location support. Uses browser Geolocation API to pinpoint user location, integrates with Overpass API to query OpenStreetMap for mental health professionals (psychotherapists, psychiatrists, mental health clinics) within a configurable radius (1-20km). Displays results on interactive map with markers, popups showing contact details, and visual search radius indicator.
 - **Global Audio Context**: React Context API provides persistent audio playback across all pages with centralized state management for volume and track selection.
 
 ### Feature Specifications
@@ -56,4 +56,6 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
 - **Database**: PostgreSQL (Neon) with Drizzle ORM for data persistence and session storage.
 - **Authentication**: Replit Auth.
 - **AI Services**: OpenAI API (GPT-4o-mini) accessed via Replit AI Integrations.
-- **Google Search**: Find Therapists feature uses Google search URLs (no API key required).
+- **Mapping**: OpenStreetMap tiles via Leaflet.js and React-Leaflet for interactive maps.
+- **Geolocation**: Browser Geolocation API for user location detection.
+- **POI Search**: Overpass API for querying OpenStreetMap mental health facility data (no API key required).
