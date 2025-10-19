@@ -1,11 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Palette, Type, LogOut, User } from "lucide-react";
+import { Check, Palette, Type, LogOut, User, Upload } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { User as UserType } from "@shared/schema";
+import { useRef, useState } from "react";
+import flowerPfp from "@assets/Flower Pfp_1760870955852.jpg";
+import leafPfp from "@assets/Leaf Pfp_1760870955897.jpg";
+import moonPfp from "@assets/Moon Pfp_1760870955902.jpg";
+import sunPfp from "@assets/Sun Profile_1760870955903.jpg";
 
 const themes = [
   {
@@ -78,16 +83,17 @@ const fontStyles = [
 ];
 
 const avatarPresets = [
-  { id: "avatar1", emoji: "😊", name: "Happy", color: "#FFD93D" },
-  { id: "avatar2", emoji: "🌸", name: "Flower", color: "#FF6B9D" },
-  { id: "avatar3", emoji: "🌊", name: "Ocean", color: "#4FC3F7" },
-  { id: "avatar4", emoji: "🌿", name: "Nature", color: "#81C784" },
-  { id: "avatar5", emoji: "⭐", name: "Star", color: "#FFB74D" },
+  { id: "flower", image: flowerPfp, name: "Flower", color: "#FFB74D" },
+  { id: "leaf", image: leafPfp, name: "Leaf", color: "#81C784" },
+  { id: "moon", image: moonPfp, name: "Moon", color: "#FFD93D" },
+  { id: "sun", image: sunPfp, name: "Sun", color: "#FF9800" },
 ];
 
 export default function Settings() {
   const { theme, setTheme, fontStyle, setFontStyle } = useTheme();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const { data: user } = useQuery<UserType>({
     queryKey: ['/api/auth/user'],
@@ -100,7 +106,7 @@ export default function Settings() {
       
       return apiRequest(`/api/user/profile-picture`, {
         method: 'PATCH',
-        body: JSON.stringify({ profileImageUrl: avatar.emoji }),
+        body: JSON.stringify({ profileImageUrl: `preset:${avatarId}` }),
         headers: { 'Content-Type': 'application/json' },
       });
     },
@@ -119,6 +125,62 @@ export default function Settings() {
       });
     },
   });
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file",
+        description: "Please upload an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Image must be less than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append('profileImage', file);
+
+      const response = await fetch('/api/user/profile-picture/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      
+      toast({
+        title: "Profile updated",
+        description: "Your custom profile picture has been uploaded.",
+      });
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload profile picture. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const handleLogout = () => {
     window.location.href = '/api/logout';
@@ -143,41 +205,71 @@ export default function Settings() {
             Choose an avatar to represent you
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-5 gap-4">
-            {avatarPresets.map((avatar) => (
-              <button
-                key={avatar.id}
-                onClick={() => updateProfilePictureMutation.mutate(avatar.id)}
-                disabled={updateProfilePictureMutation.isPending}
-                className={`
-                  relative p-4 rounded-lg border-2 transition-all text-center
-                  hover-elevate active-elevate-2
-                  ${user?.profileImageUrl === avatar.emoji 
-                    ? 'border-primary shadow-md' 
-                    : 'border-border'
-                  }
-                `}
-                data-testid={`button-avatar-${avatar.id}`}
-              >
-                {user?.profileImageUrl === avatar.emoji && (
-                  <div className="absolute -top-2 -right-2">
-                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                      <Check className="w-3 h-3 text-primary-foreground" />
-                    </div>
-                  </div>
-                )}
-                
-                <div 
-                  className="text-4xl mb-2"
-                  style={{ backgroundColor: avatar.color + '20' }}
-                >
-                  {avatar.emoji}
-                </div>
-                
-                <p className="text-xs text-muted-foreground">{avatar.name}</p>
-              </button>
-            ))}
+        <CardContent className="space-y-4">
+          <div>
+            <p className="text-sm font-medium mb-3">Default Avatars</p>
+            <div className="grid grid-cols-4 gap-4">
+              {avatarPresets.map((avatar) => {
+                const isSelected = user?.profileImageUrl === `preset:${avatar.id}`;
+                return (
+                  <button
+                    key={avatar.id}
+                    onClick={() => updateProfilePictureMutation.mutate(avatar.id)}
+                    disabled={updateProfilePictureMutation.isPending}
+                    className={`
+                      relative p-3 rounded-lg border-2 transition-all text-center
+                      hover-elevate active-elevate-2
+                      ${isSelected 
+                        ? 'border-primary shadow-md' 
+                        : 'border-border'
+                      }
+                    `}
+                    data-testid={`button-avatar-${avatar.id}`}
+                  >
+                    {isSelected && (
+                      <div className="absolute -top-2 -right-2">
+                        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                          <Check className="w-3 h-3 text-primary-foreground" />
+                        </div>
+                      </div>
+                    )}
+                    
+                    <img 
+                      src={avatar.image}
+                      alt={avatar.name}
+                      className="w-16 h-16 mx-auto mb-2 rounded-full object-cover"
+                    />
+                    
+                    <p className="text-xs text-muted-foreground">{avatar.name}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="pt-4 border-t">
+            <p className="text-sm font-medium mb-3">Custom Profile Picture</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="hidden"
+              data-testid="input-profile-upload"
+            />
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="w-full"
+              data-testid="button-upload-profile-picture"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {isUploading ? "Uploading..." : "Upload Your Own Image"}
+            </Button>
+            <p className="text-xs text-muted-foreground mt-2">
+              Max 5MB. Recommended: Square image (1:1 ratio)
+            </p>
           </div>
         </CardContent>
       </Card>

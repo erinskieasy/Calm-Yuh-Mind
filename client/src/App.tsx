@@ -9,7 +9,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { PersistentAudioPlayer } from "@/components/persistent-audio-player";
 import Landing from "@/pages/landing";
@@ -24,7 +24,19 @@ import TherapistProfile from "@/pages/therapist-profile";
 import FindTherapists from "@/pages/find-therapists";
 import MiniGames from "@/pages/mini-games";
 import Settings from "@/pages/settings";
+import AnonForum from "@/pages/anon-forum";
 import NotFound from "@/pages/not-found";
+import flowerPfp from "@assets/Flower Pfp_1760870955852.jpg";
+import leafPfp from "@assets/Leaf Pfp_1760870955897.jpg";
+import moonPfp from "@assets/Moon Pfp_1760870955902.jpg";
+import sunPfp from "@assets/Sun Profile_1760870955903.jpg";
+
+const avatarPresetMap: Record<string, string> = {
+  "preset:flower": flowerPfp,
+  "preset:leaf": leafPfp,
+  "preset:moon": moonPfp,
+  "preset:sun": sunPfp,
+};
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -50,6 +62,7 @@ function Router() {
       <Route path="/therapist-profile" component={TherapistProfile} />
       <Route path="/find-therapists" component={FindTherapists} />
       <Route path="/mini-games" component={MiniGames} />
+      <Route path="/anon-forum" component={AnonForum} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
@@ -102,8 +115,14 @@ function AuthenticatedApp({ style }: { style: Record<string, string> }) {
               {user && (user as any).email && (
                 <div className="flex items-center gap-3">
                   <Avatar className="h-8 w-8" data-testid="avatar-user">
+                    {(user as any).profileImageUrl && (
+                      <AvatarImage 
+                        src={avatarPresetMap[(user as any).profileImageUrl] || (user as any).profileImageUrl}
+                        alt="Profile"
+                      />
+                    )}
                     <AvatarFallback className="text-lg">
-                      {(user as any).profileImageUrl || "👤"}
+                      {(user as any).email?.charAt(0).toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-sm text-muted-foreground" data-testid="text-user-email">

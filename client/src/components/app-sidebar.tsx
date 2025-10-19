@@ -10,6 +10,7 @@ import {
   UserCircle,
   Search,
   Settings,
+  MessageSquare,
 } from "lucide-react";
 import {
   Sidebar,
@@ -67,6 +68,14 @@ const wellnessItems = [
   },
 ];
 
+const communityItems = [
+  {
+    title: "Anon Message Forum",
+    url: "/anon-forum",
+    icon: MessageSquare,
+  },
+];
+
 const professionalItems = [
   {
     title: "Find Therapists",
@@ -105,6 +114,28 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {wellnessItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location === item.url}
+                    data-testid={`link-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
+                    <Link href={item.url}>
+                      <item.icon className="h-5 w-5" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Community</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {communityItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild

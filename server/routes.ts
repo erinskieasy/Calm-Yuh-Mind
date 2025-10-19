@@ -29,6 +29,7 @@ const openai = new OpenAI({
 const soundsDir = path.join(process.cwd(), "uploads", "sounds");
 const imagesDir = path.join(process.cwd(), "uploads", "journal-images");
 const voiceNotesDir = path.join(process.cwd(), "uploads", "voice-notes");
+const profilePicturesDir = path.join(process.cwd(), "uploads", "profile-pictures");
 
 if (!fs.existsSync(soundsDir)) {
   fs.mkdirSync(soundsDir, { recursive: true });
@@ -38,6 +39,9 @@ if (!fs.existsSync(imagesDir)) {
 }
 if (!fs.existsSync(voiceNotesDir)) {
   fs.mkdirSync(voiceNotesDir, { recursive: true });
+}
+if (!fs.existsSync(profilePicturesDir)) {
+  fs.mkdirSync(profilePicturesDir, { recursive: true });
 }
 
 const soundStorageConfig = multer.diskStorage({
@@ -114,6 +118,31 @@ const voiceNoteUpload = multer({
   }
 });
 
+const profilePictureStorageConfig = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, profilePicturesDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
+    cb(null, "profile-" + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const profilePictureUpload = multer({
+  storage: profilePictureStorageConfig,
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files (JPEG, PNG, GIF, WebP) are allowed"));
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit for profile pictures
+  }
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth
   await setupAuth(app);
@@ -157,6 +186,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating profile picture:", error);
       res.status(500).json({ message: "Failed to update profile picture" });
+    }
+  });
+
+  app.post('/api/user/profile-picture/upload', isAuthenticated, profilePictureUpload.single('profileImage'), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "No image file uploaded" });
+      }
+
+      const profileImageUrl = `/uploads/profile-pictures/${req.file.filename}`;
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const updatedUser = await storage.upsertUser({
+        id: userId,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: profileImageUrl,
+        role: user.role,
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      res.status(500).json({ message: "Failed to upload profile picture" });
     }
   });
 
