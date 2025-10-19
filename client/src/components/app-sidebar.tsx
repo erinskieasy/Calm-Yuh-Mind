@@ -10,6 +10,7 @@ import {
   Search,
   Settings,
   MessageSquare,
+  Library,
 } from "lucide-react";
 import {
   Sidebar,
@@ -80,6 +81,11 @@ const professionalItems = [
     title: "Find Therapists",
     url: "/find-therapists",
     icon: Search,
+  },
+  {
+    title: "Resources",
+    url: "/resources",
+    icon: Library,
   },
 ];
 

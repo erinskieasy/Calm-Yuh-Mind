@@ -21,6 +21,7 @@ import Chat from "@/pages/chat";
 import Assessment from "@/pages/assessment";
 import Sounds from "@/pages/sounds";
 import FindTherapists from "@/pages/find-therapists";
+import Resources from "@/pages/resources";
 import MiniGames from "@/pages/mini-games";
 import Settings from "@/pages/settings";
 import AnonForum from "@/pages/anon-forum";
@@ -59,6 +60,7 @@ function Router() {
       <Route path="/assessment" component={Assessment} />
       <Route path="/sounds" component={Sounds} />
       <Route path="/find-therapists" component={FindTherapists} />
+      <Route path="/resources" component={Resources} />
       <Route path="/mini-games" component={MiniGames} />
       <Route path="/anon-forum" component={AnonForum} />
       <Route path="/settings" component={Settings} />

@@ -37,6 +37,11 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
   - Text chat enhanced with empathetic, varied responses using higher temperature setting (0.8) and improved system prompt for natural, personalized conversations
 - **Assessment Tools**: Comprehensive collection of 6 validated mental health screening tools (PHQ-9, GAD-7, PSS-10, Rosenberg Self-Esteem, UCLA Loneliness, PCL-5 Short) with randomized question presentation, auto-advancing flows, color-coded score interpretation, proper reverse scoring, and historical tracking.
 - **Therapist Directory**: Interactive OpenStreetMap-based therapist finder with live location support. Uses browser Geolocation API to pinpoint user location, integrates with Overpass API to query OpenStreetMap for mental health professionals (psychotherapists, psychiatrists, mental health clinics) within a configurable radius (1-20km). Displays results on interactive map with markers, popups showing contact details, and visual search radius indicator.
+- **Mental Health Resources**: Curated collection of educational materials organized in three categories:
+  - **Articles**: Evidence-based articles from trusted sources covering anxiety, depression, stress management, mindfulness, resilience, sleep, and burnout
+  - **Books**: Recommended mental health books including workbooks, therapy guides, and self-help literature with author information and descriptions
+  - **Videos**: Educational video content from platforms like TED, Headspace, and mental health educators covering meditation, CBT, panic attacks, and wellness strategies
+  - Crisis Resources section with National Suicide Prevention Lifeline (988) and Crisis Text Line information
 - **Global Audio Context**: React Context API provides persistent audio playback across all pages with centralized state management for volume and track selection.
 
 ### Feature Specifications
