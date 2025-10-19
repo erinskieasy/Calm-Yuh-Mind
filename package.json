@@ -49,6 +49,7 @@
     "@tiptap/extension-underline": "^3.7.2",
     "@tiptap/react": "^3.7.2",
     "@tiptap/starter-kit": "^3.7.2",
+    "@types/leaflet": "^1.9.21",
     "@types/memoizee": "^0.4.12",
     "@types/multer": "^2.0.0",
     "class-variance-authority": "^0.7.1",

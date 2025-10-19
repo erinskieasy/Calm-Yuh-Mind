@@ -1,318 +1,197 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Search, ExternalLink, MapPin } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MapPin, Loader2, AlertCircle, Navigation } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
-const countries = [
-  { value: "af", label: "Afghanistan" },
-  { value: "al", label: "Albania" },
-  { value: "dz", label: "Algeria" },
-  { value: "ad", label: "Andorra" },
-  { value: "ao", label: "Angola" },
-  { value: "ag", label: "Antigua and Barbuda" },
-  { value: "ar", label: "Argentina" },
-  { value: "am", label: "Armenia" },
-  { value: "au", label: "Australia" },
-  { value: "at", label: "Austria" },
-  { value: "az", label: "Azerbaijan" },
-  { value: "bs", label: "Bahamas" },
-  { value: "bh", label: "Bahrain" },
-  { value: "bd", label: "Bangladesh" },
-  { value: "bb", label: "Barbados" },
-  { value: "by", label: "Belarus" },
-  { value: "be", label: "Belgium" },
-  { value: "bz", label: "Belize" },
-  { value: "bj", label: "Benin" },
-  { value: "bt", label: "Bhutan" },
-  { value: "bo", label: "Bolivia" },
-  { value: "ba", label: "Bosnia and Herzegovina" },
-  { value: "bw", label: "Botswana" },
-  { value: "br", label: "Brazil" },
-  { value: "bn", label: "Brunei" },
-  { value: "bg", label: "Bulgaria" },
-  { value: "bf", label: "Burkina Faso" },
-  { value: "bi", label: "Burundi" },
-  { value: "cv", label: "Cabo Verde" },
-  { value: "kh", label: "Cambodia" },
-  { value: "cm", label: "Cameroon" },
-  { value: "ca", label: "Canada" },
-  { value: "cf", label: "Central African Republic" },
-  { value: "td", label: "Chad" },
-  { value: "cl", label: "Chile" },
-  { value: "cn", label: "China" },
-  { value: "co", label: "Colombia" },
-  { value: "km", label: "Comoros" },
-  { value: "cg", label: "Congo" },
-  { value: "cd", label: "Congo (Democratic Republic)" },
-  { value: "cr", label: "Costa Rica" },
-  { value: "hr", label: "Croatia" },
-  { value: "cu", label: "Cuba" },
-  { value: "cy", label: "Cyprus" },
-  { value: "cz", label: "Czech Republic" },
-  { value: "dk", label: "Denmark" },
-  { value: "dj", label: "Djibouti" },
-  { value: "dm", label: "Dominica" },
-  { value: "do", label: "Dominican Republic" },
-  { value: "ec", label: "Ecuador" },
-  { value: "eg", label: "Egypt" },
-  { value: "sv", label: "El Salvador" },
-  { value: "gq", label: "Equatorial Guinea" },
-  { value: "er", label: "Eritrea" },
-  { value: "ee", label: "Estonia" },
-  { value: "sz", label: "Eswatini" },
-  { value: "et", label: "Ethiopia" },
-  { value: "fj", label: "Fiji" },
-  { value: "fi", label: "Finland" },
-  { value: "fr", label: "France" },
-  { value: "ga", label: "Gabon" },
-  { value: "gm", label: "Gambia" },
-  { value: "ge", label: "Georgia" },
-  { value: "de", label: "Germany" },
-  { value: "gh", label: "Ghana" },
-  { value: "gr", label: "Greece" },
-  { value: "gd", label: "Grenada" },
-  { value: "gt", label: "Guatemala" },
-  { value: "gn", label: "Guinea" },
-  { value: "gw", label: "Guinea-Bissau" },
-  { value: "gy", label: "Guyana" },
-  { value: "ht", label: "Haiti" },
-  { value: "hn", label: "Honduras" },
-  { value: "hu", label: "Hungary" },
-  { value: "is", label: "Iceland" },
-  { value: "in", label: "India" },
-  { value: "id", label: "Indonesia" },
-  { value: "ir", label: "Iran" },
-  { value: "iq", label: "Iraq" },
-  { value: "ie", label: "Ireland" },
-  { value: "il", label: "Israel" },
-  { value: "it", label: "Italy" },
-  { value: "jm", label: "Jamaica" },
-  { value: "jp", label: "Japan" },
-  { value: "jo", label: "Jordan" },
-  { value: "kz", label: "Kazakhstan" },
-  { value: "ke", label: "Kenya" },
-  { value: "ki", label: "Kiribati" },
-  { value: "kp", label: "Korea (North)" },
-  { value: "kr", label: "Korea (South)" },
-  { value: "kw", label: "Kuwait" },
-  { value: "kg", label: "Kyrgyzstan" },
-  { value: "la", label: "Laos" },
-  { value: "lv", label: "Latvia" },
-  { value: "lb", label: "Lebanon" },
-  { value: "ls", label: "Lesotho" },
-  { value: "lr", label: "Liberia" },
-  { value: "ly", label: "Libya" },
-  { value: "li", label: "Liechtenstein" },
-  { value: "lt", label: "Lithuania" },
-  { value: "lu", label: "Luxembourg" },
-  { value: "mg", label: "Madagascar" },
-  { value: "mw", label: "Malawi" },
-  { value: "my", label: "Malaysia" },
-  { value: "mv", label: "Maldives" },
-  { value: "ml", label: "Mali" },
-  { value: "mt", label: "Malta" },
-  { value: "mh", label: "Marshall Islands" },
-  { value: "mr", label: "Mauritania" },
-  { value: "mu", label: "Mauritius" },
-  { value: "mx", label: "Mexico" },
-  { value: "fm", label: "Micronesia" },
-  { value: "md", label: "Moldova" },
-  { value: "mc", label: "Monaco" },
-  { value: "mn", label: "Mongolia" },
-  { value: "me", label: "Montenegro" },
-  { value: "ma", label: "Morocco" },
-  { value: "mz", label: "Mozambique" },
-  { value: "mm", label: "Myanmar" },
-  { value: "na", label: "Namibia" },
-  { value: "nr", label: "Nauru" },
-  { value: "np", label: "Nepal" },
-  { value: "nl", label: "Netherlands" },
-  { value: "nz", label: "New Zealand" },
-  { value: "ni", label: "Nicaragua" },
-  { value: "ne", label: "Niger" },
-  { value: "ng", label: "Nigeria" },
-  { value: "mk", label: "North Macedonia" },
-  { value: "no", label: "Norway" },
-  { value: "om", label: "Oman" },
-  { value: "pk", label: "Pakistan" },
-  { value: "pw", label: "Palau" },
-  { value: "ps", label: "Palestine" },
-  { value: "pa", label: "Panama" },
-  { value: "pg", label: "Papua New Guinea" },
-  { value: "py", label: "Paraguay" },
-  { value: "pe", label: "Peru" },
-  { value: "ph", label: "Philippines" },
-  { value: "pl", label: "Poland" },
-  { value: "pt", label: "Portugal" },
-  { value: "qa", label: "Qatar" },
-  { value: "ro", label: "Romania" },
-  { value: "ru", label: "Russia" },
-  { value: "rw", label: "Rwanda" },
-  { value: "kn", label: "Saint Kitts and Nevis" },
-  { value: "lc", label: "Saint Lucia" },
-  { value: "vc", label: "Saint Vincent and the Grenadines" },
-  { value: "ws", label: "Samoa" },
-  { value: "sm", label: "San Marino" },
-  { value: "st", label: "Sao Tome and Principe" },
-  { value: "sa", label: "Saudi Arabia" },
-  { value: "sn", label: "Senegal" },
-  { value: "rs", label: "Serbia" },
-  { value: "sc", label: "Seychelles" },
-  { value: "sl", label: "Sierra Leone" },
-  { value: "sg", label: "Singapore" },
-  { value: "sk", label: "Slovakia" },
-  { value: "si", label: "Slovenia" },
-  { value: "sb", label: "Solomon Islands" },
-  { value: "so", label: "Somalia" },
-  { value: "za", label: "South Africa" },
-  { value: "ss", label: "South Sudan" },
-  { value: "es", label: "Spain" },
-  { value: "lk", label: "Sri Lanka" },
-  { value: "sd", label: "Sudan" },
-  { value: "sr", label: "Suriname" },
-  { value: "se", label: "Sweden" },
-  { value: "ch", label: "Switzerland" },
-  { value: "sy", label: "Syria" },
-  { value: "tw", label: "Taiwan" },
-  { value: "tj", label: "Tajikistan" },
-  { value: "tz", label: "Tanzania" },
-  { value: "th", label: "Thailand" },
-  { value: "tl", label: "Timor-Leste" },
-  { value: "tg", label: "Togo" },
-  { value: "to", label: "Tonga" },
-  { value: "tt", label: "Trinidad and Tobago" },
-  { value: "tn", label: "Tunisia" },
-  { value: "tr", label: "Turkey" },
-  { value: "tm", label: "Turkmenistan" },
-  { value: "tv", label: "Tuvalu" },
-  { value: "ug", label: "Uganda" },
-  { value: "ua", label: "Ukraine" },
-  { value: "ae", label: "United Arab Emirates" },
-  { value: "uk", label: "United Kingdom" },
-  { value: "us", label: "United States" },
-  { value: "uy", label: "Uruguay" },
-  { value: "uz", label: "Uzbekistan" },
-  { value: "vu", label: "Vanuatu" },
-  { value: "va", label: "Vatican City" },
-  { value: "ve", label: "Venezuela" },
-  { value: "vn", label: "Vietnam" },
-  { value: "ye", label: "Yemen" },
-  { value: "zm", label: "Zambia" },
-  { value: "zw", label: "Zimbabwe" },
-];
+// Fix default marker icon issue with Leaflet
+import icon from "leaflet/dist/images/marker-icon.png";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
-const usStates = [
-  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
-  "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
-  "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
-  "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico",
-  "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
-  "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
-  "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
-];
+const DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
 
-const canadianProvinces = [
-  "Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador",
-  "Northwest Territories", "Nova Scotia", "Nunavut", "Ontario", "Prince Edward Island",
-  "Quebec", "Saskatchewan", "Yukon"
-];
+L.Marker.prototype.options.icon = DefaultIcon;
 
-const ukRegions = [
-  "England", "Scotland", "Wales", "Northern Ireland"
-];
+interface Therapist {
+  id: number;
+  lat: number;
+  lon: number;
+  name: string;
+  type: string;
+  address?: string;
+  phone?: string;
+  website?: string;
+}
 
-const australianStates = [
-  "New South Wales", "Queensland", "South Australia", "Tasmania", "Victoria",
-  "Western Australia", "Australian Capital Territory", "Northern Territory"
-];
+interface UserLocation {
+  lat: number;
+  lon: number;
+}
+
+// Component to center map on user location
+function LocationMarker({ position, onLocationFound }: { 
+  position: UserLocation | null; 
+  onLocationFound: (location: UserLocation) => void;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!position) {
+      map.locate().on("locationfound", (e) => {
+        const location = { lat: e.latlng.lat, lon: e.latlng.lng };
+        onLocationFound(location);
+        map.flyTo(e.latlng, 13);
+      });
+    }
+  }, [map, position, onLocationFound]);
+
+  return position ? (
+    <>
+      <Marker position={[position.lat, position.lon]}>
+        <Popup>
+          <strong>Your Location</strong>
+          <br />
+          You are here
+        </Popup>
+      </Marker>
+    </>
+  ) : null;
+}
 
 export default function FindTherapists() {
-  const [country, setCountry] = useState("");
-  const [stateProvince, setStateProvince] = useState("");
-  const [city, setCity] = useState("");
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+  const [therapists, setTherapists] = useState<Therapist[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [radius, setRadius] = useState(5000); // meters
+  const [showCircle, setShowCircle] = useState(true);
 
-  const getRegionOptions = () => {
-    switch (country) {
-      case "us":
-        return usStates;
-      case "ca":
-        return canadianProvinces;
-      case "uk":
-        return ukRegions;
-      case "au":
-        return australianStates;
-      default:
-        return [];
+  const fetchTherapists = async (location: UserLocation, searchRadius: number) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const overpassUrl = "https://overpass-api.de/api/interpreter";
+      
+      // Query for mental health professionals
+      const query = `
+        [out:json][timeout:25];
+        (
+          node["healthcare"="psychotherapist"](around:${searchRadius},${location.lat},${location.lon});
+          way["healthcare"="psychotherapist"](around:${searchRadius},${location.lat},${location.lon});
+          node["healthcare"="psychiatry"](around:${searchRadius},${location.lat},${location.lon});
+          way["healthcare"="psychiatry"](around:${searchRadius},${location.lat},${location.lon});
+          node["amenity"="clinic"]["healthcare:speciality"="mental_health"](around:${searchRadius},${location.lat},${location.lon});
+          way["amenity"="clinic"]["healthcare:speciality"="mental_health"](around:${searchRadius},${location.lat},${location.lon});
+          node["amenity"="clinic"]["healthcare:speciality"="psychiatry"](around:${searchRadius},${location.lat},${location.lon});
+          way["amenity"="clinic"]["healthcare:speciality"="psychiatry"](around:${searchRadius},${location.lat},${location.lon});
+        );
+        out body;
+        >;
+        out skel qt;
+      `;
+
+      const response = await fetch(overpassUrl, {
+        method: "POST",
+        body: query,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch therapists from OpenStreetMap");
+      }
+
+      const data = await response.json();
+      
+      // Process and format results
+      const formattedTherapists: Therapist[] = data.elements
+        .filter((el: any) => el.lat && el.lon)
+        .map((el: any) => ({
+          id: el.id,
+          lat: el.lat,
+          lon: el.lon,
+          name: el.tags?.name || "Mental Health Professional",
+          type: el.tags?.healthcare || el.tags?.amenity || "Unknown",
+          address: el.tags?.["addr:street"] 
+            ? `${el.tags["addr:housenumber"] || ""} ${el.tags["addr:street"]}, ${el.tags["addr:city"] || ""}`.trim()
+            : undefined,
+          phone: el.tags?.phone,
+          website: el.tags?.website,
+        }));
+
+      setTherapists(formattedTherapists);
+      
+      if (formattedTherapists.length === 0) {
+        setError("No therapists found in this area. Try increasing the search radius or searching in a different location.");
+      }
+    } catch (err) {
+      console.error("Error fetching therapists:", err);
+      setError("Unable to load therapists. Please try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getRegionLabel = () => {
-    switch (country) {
-      case "us":
-        return "State";
-      case "ca":
-        return "Province/Territory";
-      case "uk":
-        return "Region";
-      case "au":
-        return "State/Territory";
-      default:
-        return "State/Province/Region";
-    }
+  const handleLocationFound = (location: UserLocation) => {
+    setUserLocation(location);
+    fetchTherapists(location, radius);
   };
 
-  const handleSearch = () => {
-    const parts = [];
-    if (city) parts.push(city);
-    if (stateProvince) parts.push(stateProvince);
+  const handleGetLocation = () => {
+    setError(null);
     
-    const countryName = countries.find(c => c.value === country)?.label;
-    if (countryName) parts.push(countryName);
-    
-    const location = parts.join(", ");
-
-    if (!location.trim()) {
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported by your browser.");
       return;
     }
 
-    // Construct Google search query
-    const searchQuery = `therapists OR psychiatrists OR mental health counselors in ${location}`;
-    const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
-    
-    // Open in new tab
-    window.open(googleSearchUrl, "_blank");
+    setLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const location = {
+          lat: position.coords.latitude,
+          lon: position.coords.longitude,
+        };
+        handleLocationFound(location);
+      },
+      (err) => {
+        setLoading(false);
+        if (err.code === 1) {
+          setError("Location access denied. Please enable location permissions in your browser.");
+        } else if (err.code === 2) {
+          setError("Unable to determine your location. Please try again.");
+        } else if (err.code === 3) {
+          setError("Location request timed out. Please try again.");
+        } else {
+          setError("An error occurred while getting your location.");
+        }
+      }
+    );
   };
 
-  const isSearchDisabled = () => {
-    // For countries with regions, require region selection
-    if (getRegionOptions().length > 0) {
-      return !country || !stateProvince;
+  const handleRadiusChange = (newRadius: string) => {
+    const radiusValue = parseInt(newRadius);
+    setRadius(radiusValue);
+    if (userLocation) {
+      fetchTherapists(userLocation, radiusValue);
     }
-    // For other countries, just require country
-    return !country;
-  };
-
-  const resetForm = () => {
-    setCountry("");
-    setStateProvince("");
-    setCity("");
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-display font-bold">Find Mental Health Professionals</h1>
+        <h1 className="text-3xl font-display font-bold">Find Nearby Therapists</h1>
         <p className="text-muted-foreground mt-2">
-          Search for therapists, psychiatrists, and mental health counselors in your area
+          Discover mental health professionals near you using OpenStreetMap
         </p>
       </div>
 
@@ -320,84 +199,141 @@ export default function FindTherapists() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="w-5 h-5" />
-            Select Your Location
+            Search Controls
           </CardTitle>
           <CardDescription>
-            Choose your country and region to find mental health professionals near you
+            Use your live location to find nearby therapists and psychiatrists
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="country">Country *</Label>
-            <Select value={country} onValueChange={setCountry}>
-              <SelectTrigger id="country" data-testid="select-country">
-                <SelectValue placeholder="Select a country" />
-              </SelectTrigger>
-              <SelectContent>
-                {countries.map((c) => (
-                  <SelectItem key={c.value} value={c.value}>
-                    {c.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {country && getRegionOptions().length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="state-province">{getRegionLabel()} *</Label>
-              <Select value={stateProvince} onValueChange={setStateProvince}>
-                <SelectTrigger id="state-province" data-testid="select-state">
-                  <SelectValue placeholder={`Select a ${getRegionLabel().toLowerCase()}`} />
+          <div className="flex gap-4 items-end">
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="radius">Search Radius</Label>
+              <Select value={radius.toString()} onValueChange={handleRadiusChange}>
+                <SelectTrigger id="radius" data-testid="select-radius">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {getRegionOptions().map((region) => (
-                    <SelectItem key={region} value={region}>
-                      {region}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="1000">1 km (0.6 miles)</SelectItem>
+                  <SelectItem value="2000">2 km (1.2 miles)</SelectItem>
+                  <SelectItem value="5000">5 km (3.1 miles)</SelectItem>
+                  <SelectItem value="10000">10 km (6.2 miles)</SelectItem>
+                  <SelectItem value="20000">20 km (12.4 miles)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          )}
-
-          {country && (
-            <div className="space-y-2">
-              <Label htmlFor="city">
-                City {getRegionOptions().length > 0 ? "(Optional)" : "*"}
-              </Label>
-              <Input
-                id="city"
-                placeholder="e.g., Los Angeles, Toronto, London, Paris"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                data-testid="input-city"
-              />
-              {getRegionOptions().length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Enter your city or region
-                </p>
-              )}
-            </div>
-          )}
-
-          <div className="flex gap-2 pt-2">
             <Button
-              onClick={handleSearch}
-              disabled={isSearchDisabled()}
-              className="flex-1"
-              data-testid="button-search-google"
+              onClick={handleGetLocation}
+              disabled={loading}
+              data-testid="button-get-location"
             >
-              <Search className="w-4 h-4 mr-2" />
-              Search on Google
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Navigation className="w-4 h-4 mr-2" />
+                  Use My Location
+                </>
+              )}
             </Button>
             <Button
               variant="outline"
-              onClick={resetForm}
-              data-testid="button-reset"
+              onClick={() => setShowCircle(!showCircle)}
+              disabled={!userLocation}
+              data-testid="button-toggle-circle"
             >
-              Reset
+              {showCircle ? "Hide" : "Show"} Radius
             </Button>
+          </div>
+
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {therapists.length > 0 && (
+            <Alert>
+              <MapPin className="h-4 w-4" />
+              <AlertDescription>
+                Found {therapists.length} mental health professional{therapists.length !== 1 ? "s" : ""} within {radius / 1000} km
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          <div style={{ height: "600px", width: "100%" }}>
+            <MapContainer
+              center={userLocation ? [userLocation.lat, userLocation.lon] : [40.7128, -74.0060]}
+              zoom={13}
+              style={{ height: "100%", width: "100%" }}
+              data-testid="map-container"
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              
+              <LocationMarker position={userLocation} onLocationFound={handleLocationFound} />
+              
+              {userLocation && showCircle && (
+                <Circle
+                  center={[userLocation.lat, userLocation.lon]}
+                  radius={radius}
+                  pathOptions={{
+                    color: "hsl(var(--primary))",
+                    fillColor: "hsl(var(--primary))",
+                    fillOpacity: 0.1,
+                  }}
+                />
+              )}
+              
+              {therapists.map((therapist) => (
+                <Marker
+                  key={therapist.id}
+                  position={[therapist.lat, therapist.lon]}
+                  data-testid={`marker-therapist-${therapist.id}`}
+                >
+                  <Popup>
+                    <div className="space-y-1">
+                      <h3 className="font-semibold">{therapist.name}</h3>
+                      <p className="text-sm text-muted-foreground capitalize">
+                        {therapist.type.replace(/_/g, " ")}
+                      </p>
+                      {therapist.address && (
+                        <p className="text-sm">{therapist.address}</p>
+                      )}
+                      {therapist.phone && (
+                        <p className="text-sm">
+                          <a href={`tel:${therapist.phone}`} className="text-primary hover:underline">
+                            {therapist.phone}
+                          </a>
+                        </p>
+                      )}
+                      {therapist.website && (
+                        <p className="text-sm">
+                          <a 
+                            href={therapist.website} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            Visit Website
+                          </a>
+                        </p>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
           </div>
         </CardContent>
       </Card>
@@ -412,8 +348,11 @@ export default function FindTherapists() {
               1
             </div>
             <div>
-              <p className="font-medium text-foreground">Select Your Location</p>
-              <p>Choose your country. For US, Canada, UK, and Australia, also select your state/province/region. Add city for more specific results.</p>
+              <p className="font-medium text-foreground">Share Your Location</p>
+              <p>
+                Click "Use My Location" to allow your browser to access your current location.
+                Your location is only used locally and never stored.
+              </p>
             </div>
           </div>
           <div className="flex gap-3">
@@ -421,9 +360,10 @@ export default function FindTherapists() {
               2
             </div>
             <div>
-              <p className="font-medium text-foreground">Search on Google</p>
+              <p className="font-medium text-foreground">Search Nearby</p>
               <p>
-                Click the search button to open Google results for "therapists OR psychiatrists in [your location]"
+                The map will search OpenStreetMap for mental health professionals within your selected radius.
+                Adjust the radius to expand or narrow your search.
               </p>
             </div>
           </div>
@@ -432,18 +372,17 @@ export default function FindTherapists() {
               3
             </div>
             <div>
-              <p className="font-medium text-foreground">Browse Results</p>
+              <p className="font-medium text-foreground">View Details</p>
               <p>
-                Review Google's search results to find mental health professionals, read reviews, 
-                check their websites, and contact them directly
+                Click on any marker to see details about the therapist, including their name, address,
+                phone number, and website (when available).
               </p>
             </div>
           </div>
-          <div className="flex items-start gap-2 p-3 bg-background rounded-md border mt-4">
-            <ExternalLink className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <div className="p-3 bg-background rounded-md border mt-4">
             <p className="text-xs">
-              Clicking "Search on Google" will open a new browser tab with Google search results. 
-              You'll be able to see therapist listings, reviews, contact information, and websites.
+              <strong>Note:</strong> Data is sourced from OpenStreetMap, a crowd-sourced mapping platform.
+              Coverage may vary by location. Always verify information directly with the provider before making an appointment.
             </p>
           </div>
         </CardContent>
