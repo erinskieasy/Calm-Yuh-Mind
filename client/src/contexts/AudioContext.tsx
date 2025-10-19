@@ -6,6 +6,7 @@ import windChimesAudio from "@assets/Wind Chimes_1760847358473.mp3";
 import fireplaceAudio from "@assets/Crackling Sounds_1760848106418.mp3";
 import rainAudio from "@assets/Rain Sounds_1760848622709.mp3";
 import whiteNoiseAudio from "@assets/White Noise_1760849619231.mp3";
+import natureSoundsAudio from "@assets/Short 10 Min Nature Sounds Meditation - Relaxing Forest Morning Birds Chirping - Calm Sleeping Sound_1760864476540.mp3";
 
 export interface Track {
   id: string;
@@ -51,6 +52,13 @@ export const defaultTracks: Track[] = [
     description: "Steady background hum",
     color: "hsl(220, 10%, 50%)",
     audioSrc: whiteNoiseAudio,
+  },
+  {
+    id: "nature-sounds",
+    name: "Nature Sounds",
+    description: "Forest morning birds chirping",
+    color: "hsl(120, 50%, 60%)",
+    audioSrc: natureSoundsAudio,
   },
 ];
 
