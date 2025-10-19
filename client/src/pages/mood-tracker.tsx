@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Smile, Frown, Meh, Laugh, Angry, Calendar as CalendarIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Smile, Frown, Meh, Laugh, Angry, Calendar as CalendarIcon, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { MoodEntry, InsertMoodEntry } from "@shared/schema";
@@ -75,6 +76,8 @@ export default function MoodTracker() {
   const [bubbleMood, setBubbleMood] = useState<{ icon: LucideIcon; color: string } | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: moodEntries = [], isLoading } = useQuery<MoodEntry[]>({
@@ -175,6 +178,21 @@ export default function MoodTracker() {
     { value: 11, label: "November" },
     { value: 12, label: "December" },
   ];
+
+  const handleDateClick = (date: string) => {
+    setSelectedDate(date);
+    setIsDialogOpen(true);
+  };
+
+  const selectedDateMood = useMemo(() => {
+    if (!selectedDate) return null;
+    return moodEntries.find((m) => m.date === selectedDate);
+  }, [selectedDate, moodEntries]);
+
+  const selectedDateMoodConfig = useMemo(() => {
+    if (!selectedDateMood) return null;
+    return moods.find((m) => m.name === selectedDateMood.mood);
+  }, [selectedDateMood]);
 
   return (
     <div className="space-y-8">
@@ -367,15 +385,16 @@ export default function MoodTracker() {
                 const dayOfWeek = new Date(date).getDay();
                 
                 return (
-                  <div
+                  <button
                     key={date}
-                    className="aspect-square rounded-lg flex flex-col items-center justify-center text-xs gap-0.5 hover-elevate transition-all"
+                    onClick={() => handleDateClick(date)}
+                    className="aspect-square rounded-lg flex flex-col items-center justify-center text-xs gap-0.5 hover-elevate active-elevate-2 transition-all cursor-pointer"
                     style={{
                       backgroundColor: dayMood
                         ? `${moodConfig?.color}40`
                         : "hsl(var(--muted))",
                     }}
-                    title={`${date}${dayMood ? ` - ${moodConfig?.label} (${dayMood.intensity}/5)` : ""}`}
+                    title={`${date}${dayMood ? ` - ${moodConfig?.label} (${dayMood.intensity}/5)` : " - Click to view"}`}
                     data-testid={`calendar-day-${date}`}
                   >
                     <span className="font-medium">{new Date(date).getDate()}</span>
@@ -385,7 +404,7 @@ export default function MoodTracker() {
                         style={{ backgroundColor: moodConfig.color }}
                       />
                     )}
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -399,6 +418,68 @@ export default function MoodTracker() {
           )}
         </CardContent>
       </Card>
+
+      {/* Date Details Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent data-testid="dialog-date-details">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarIcon className="w-5 h-5" />
+              {selectedDate && new Date(selectedDate).toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {selectedDateMood && selectedDateMoodConfig ? (
+              <>
+                <div className="flex items-center gap-4 p-4 rounded-lg" style={{ backgroundColor: `${selectedDateMoodConfig.color}20` }}>
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: selectedDateMoodConfig.color }}
+                  >
+                    {(() => {
+                      const Icon = selectedDateMoodConfig.icon;
+                      return <Icon className="w-8 h-8 text-white" />;
+                    })()}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-semibold capitalize">{selectedDateMoodConfig.label}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Intensity: {selectedDateMood.intensity}/5
+                    </p>
+                  </div>
+                </div>
+
+                {selectedDateMood.note && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">Note:</h4>
+                    <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                      {selectedDateMood.note}
+                    </p>
+                  </div>
+                )}
+
+                <div className="text-xs text-muted-foreground">
+                  Logged at {new Date(selectedDateMood.createdAt).toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="text-lg mb-2">No mood logged for this date</p>
+                <p className="text-sm">Use the form above to log your mood.</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
