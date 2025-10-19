@@ -234,6 +234,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload voice note and transcribe with Whisper
+  app.post("/api/chat/voice-note", isAuthenticated, voiceNoteUpload.single("audio"), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      if (!req.file) {
+        return res.status(400).json({ error: "No audio file uploaded" });
+      }
+
+      const audioUrl = `/uploads/voice-notes/${req.file.filename}`;
+
+      // Transcribe audio using OpenAI Whisper
+      const transcription = await openai.audio.transcriptions.create({
+        file: fs.createReadStream(req.file.path),
+        model: "whisper-1",
+      });
+
+      const transcribedText = transcription.text;
+
+      // Create user message with both audio and transcription
+      const userMessage = await storage.createChatMessage({
+        userId,
+        role: "user",
+        content: transcribedText,
+        audioUrl: audioUrl,
+      });
+
+      // Get chat history for context
+      const allMessages = await storage.getChatMessages(userId);
+      const chatHistory = allMessages.map((msg) => ({
+        role: msg.role as "user" | "assistant",
+        content: msg.content,
+      }));
+
+      // Get AI response
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a warm, empathetic mental health companion speaking to someone who needs genuine support. Respond naturally as if having a caring conversation with a friend. Vary your responses - avoid repetitive phrases and patterns. Show deep empathy by acknowledging their feelings before offering guidance. Use conversational language and avoid clinical jargon. Share coping strategies in a gentle, personalized way. When appropriate, validate their experiences and normalize their emotions. If they express thoughts of self-harm or severe distress, respond with compassion first, then gently suggest professional support. Keep your voice warm, authentic, and human. Tailor each response to their unique situation rather than generic advice.",
+          },
+          ...chatHistory,
+        ],
+        max_tokens: 500,
+        temperature: 0.8,
+      });
+
+      const assistantContent =
+        completion.choices[0]?.message?.content ||
+        "I'm here to support you. How are you feeling?";
+
+      const assistantMessage = await storage.createChatMessage({
+        userId,
+        role: "assistant",
+        content: assistantContent,
+      });
+
+      res.json({ user: userMessage, assistant: assistantMessage });
+    } catch (error: any) {
+      // Clean up file if processing fails
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      console.error("Voice note error:", error);
+      res.status(500).json({ error: error.message || "Failed to process voice note" });
+    }
+  });
+
   app.post("/api/chat", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
