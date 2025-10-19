@@ -24,7 +24,7 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
 - **Backend**: Express.js server.
 - **Authentication**: Replit Auth integration supporting multiple providers (Google, GitHub, X, Apple, email/password) with secure, session-based authentication persisted in PostgreSQL. All application features require authentication, and user data is isolated.
 - **AI Integration**: OpenAI API (GPT-4o-mini) via Replit AI Integrations for a compassionate AI companion, with conversation history persistence.
-- **Assessment Tools**: Implements PHQ-9 and GAD-7 screenings with auto-advancing flows, score interpretation, and historical tracking.
+- **Assessment Tools**: Comprehensive collection of 6 validated mental health screening tools (PHQ-9, GAD-7, PSS-10, Rosenberg Self-Esteem, UCLA Loneliness, PCL-5 Short) with randomized question presentation, auto-advancing flows, color-coded score interpretation, proper reverse scoring, and historical tracking.
 - **Therapist Directory**: Location-based search using the browser Geolocation API, distance filtering (Haversine formula), and specialty filtering. Therapist profiles can be managed by professionals.
 
 ### Feature Specifications
@@ -33,6 +33,17 @@ Serenity utilizes a modern full-stack architecture with a clear separation of co
 - **Digital Journal**: Rich text editor for entries with chronological timeline.
 - **Meditation & Breathing**: Guided exercises with interactive timers and session tracking.
 - **Soothing Sounds**: 6 ambient soundscapes with volume control and persistent player.
+- **Self-Assessment Tools**: 
+  - **Depression**: PHQ-9 (9 questions, 5-level severity)
+  - **Anxiety**: GAD-7 (7 questions, 4-level severity)
+  - **Stress**: PSS-10 Perceived Stress Scale (10 questions with reverse scoring)
+  - **Self-Esteem**: Rosenberg Self-Esteem Scale (10 questions with reverse scoring)
+  - **Social Connection**: UCLA Loneliness Scale Short (8 questions with reverse scoring)
+  - **Trauma**: PCL-5 Short PTSD Checklist (8 questions, 4-level severity)
+  - **Question Randomization**: Questions shuffle each time to reduce response bias
+  - **Proper Scoring**: Handles reverse-scored items automatically
+  - **Results Tracking**: Displays last 10 assessments with color-coded interpretations
+  - **Category Organization**: Assessments grouped by mental health domain
 
 ### System Design Choices
 - **Data Isolation**: All user data (moods, journals, assessments, chat history, meditation sessions, therapist profiles) is scoped to authenticated users.

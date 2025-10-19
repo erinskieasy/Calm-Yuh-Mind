@@ -216,6 +216,7 @@ export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
 
 export const insertAssessmentResultSchema = createInsertSchema(assessmentResults).omit({
   id: true,
+  userId: true,
   createdAt: true,
 });
 
