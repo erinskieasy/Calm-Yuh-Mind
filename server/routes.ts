@@ -13,6 +13,8 @@ import {
   updateTherapistProfileSchema,
   insertConsultationRequestSchema,
   insertCustomSoundSchema,
+  insertForumPostSchema,
+  insertForumCommentSchema,
 } from "@shared/schema";
 import { calculateDistance } from "./utils/distance";
 import OpenAI from "openai";
@@ -701,6 +703,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete custom sound error:", error);
       res.status(500).json({ error: "Failed to delete custom sound" });
+    }
+  });
+
+  // AI Moderation helper function
+  async function moderateContent(content: string): Promise<{ isFlagged: boolean; reason?: string }> {
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a content moderation assistant. Analyze the text and determine if it contains derogatory language, hate speech, harassment, or harmful content. Respond with 'FLAGGED: [reason]' if inappropriate, or 'SAFE' if acceptable."
+          },
+          {
+            role: "user",
+            content: `Analyze this content for moderation: "${content}"`
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 100,
+      });
+
+      const result = response.choices[0]?.message?.content || "SAFE";
+      
+      if (result.startsWith("FLAGGED:")) {
+        return { isFlagged: true, reason: result.substring(8).trim() };
+      }
+      
+      return { isFlagged: false };
+    } catch (error) {
+      console.error("Moderation error:", error);
+      return { isFlagged: false };
+    }
+  }
+
+  // Forum routes
+  app.get("/api/forums", isAuthenticated, async (_req: any, res) => {
+    try {
+      const forums = await storage.getForums();
+      res.json(forums);
+    } catch (error) {
+      console.error("Get forums error:", error);
+      res.status(500).json({ error: "Failed to retrieve forums" });
+    }
+  });
+
+  app.get("/api/forums/:forumId/posts", isAuthenticated, async (req: any, res) => {
+    try {
+      const { forumId } = req.params;
+      const posts = await storage.getForumPosts(forumId);
+      res.json(posts);
+    } catch (error) {
+      console.error("Get forum posts error:", error);
+      res.status(500).json({ error: "Failed to retrieve forum posts" });
+    }
+  });
+
+  app.post("/api/forums/:forumId/posts", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { forumId } = req.params;
+      const postData = insertForumPostSchema.parse({ ...req.body, forumId });
+
+      // Moderate content
+      const titleModeration = await moderateContent(postData.title);
+      const contentModeration = await moderateContent(postData.content);
+
+      if (titleModeration.isFlagged || contentModeration.isFlagged) {
+        return res.status(400).json({
+          error: "Content flagged by moderator",
+          reason: titleModeration.reason || contentModeration.reason,
+          isFlagged: true,
+        });
+      }
+
+      const post = await storage.createForumPost({ ...postData, userId });
+      res.json(post);
+    } catch (error) {
+      console.error("Create forum post error:", error);
+      res.status(400).json({ error: "Failed to create forum post" });
+    }
+  });
+
+  app.delete("/api/forums/posts/:postId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+
+      await storage.deleteForumPost(postId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete forum post error:", error);
+      res.status(500).json({ error: "Failed to delete forum post" });
+    }
+  });
+
+  app.get("/api/forums/posts/:postId/comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const { postId } = req.params;
+      const comments = await storage.getForumComments(postId);
+      res.json(comments);
+    } catch (error) {
+      console.error("Get comments error:", error);
+      res.status(500).json({ error: "Failed to retrieve comments" });
+    }
+  });
+
+  app.post("/api/forums/posts/:postId/comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postId } = req.params;
+      const commentData = insertForumCommentSchema.parse({ ...req.body, postId });
+
+      // Moderate content
+      const moderation = await moderateContent(commentData.content);
+
+      if (moderation.isFlagged) {
+        return res.status(400).json({
+          error: "Comment flagged by moderator",
+          reason: moderation.reason,
+          isFlagged: true,
+        });
+      }
+
+      const comment = await storage.createForumComment({ ...commentData, userId });
+      res.json(comment);
+    } catch (error) {
+      console.error("Create comment error:", error);
+      res.status(400).json({ error: "Failed to create comment" });
+    }
+  });
+
+  app.delete("/api/forums/comments/:commentId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { commentId } = req.params;
+
+      await storage.deleteForumComment(commentId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete comment error:", error);
+      res.status(500).json({ error: "Failed to delete comment" });
     }
   });
 

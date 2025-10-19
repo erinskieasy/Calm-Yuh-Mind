@@ -8,6 +8,9 @@ import {
   therapistProfiles,
   consultationRequests,
   customSounds,
+  forums,
+  forumPosts,
+  forumComments,
   type User,
   type UpsertUser,
   type MoodEntry,
@@ -27,6 +30,11 @@ import {
   type InsertConsultationRequest,
   type CustomSound,
   type InsertCustomSound,
+  type Forum,
+  type ForumPost,
+  type InsertForumPost,
+  type ForumComment,
+  type InsertForumComment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, sql } from "drizzle-orm";
@@ -77,6 +85,19 @@ export interface IStorage {
   getCustomSounds(userId: string): Promise<CustomSound[]>;
   createCustomSound(sound: InsertCustomSound): Promise<CustomSound>;
   deleteCustomSound(id: string, userId: string): Promise<void>;
+
+  // Forums
+  getForums(): Promise<Forum[]>;
+  getForumPosts(forumId: string): Promise<(ForumPost & { commentCount: number })[]>;
+  getForumPost(id: string): Promise<ForumPost | undefined>;
+  createForumPost(post: InsertForumPost): Promise<ForumPost>;
+  deleteForumPost(id: string, userId: string): Promise<void>;
+  flagForumPost(id: string, reason: string): Promise<void>;
+  
+  getForumComments(postId: string): Promise<ForumComment[]>;
+  createForumComment(comment: InsertForumComment): Promise<ForumComment>;
+  deleteForumComment(id: string, userId: string): Promise<void>;
+  flagForumComment(id: string, reason: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -360,6 +381,101 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(customSounds)
       .where(and(eq(customSounds.id, id), eq(customSounds.userId, userId)));
+  }
+
+  // Forums
+  async getForums(): Promise<Forum[]> {
+    return await db
+      .select()
+      .from(forums)
+      .orderBy(forums.name);
+  }
+
+  async getForumPosts(forumId: string): Promise<(ForumPost & { commentCount: number })[]> {
+    const posts = await db
+      .select({
+        id: forumPosts.id,
+        forumId: forumPosts.forumId,
+        userId: forumPosts.userId,
+        title: forumPosts.title,
+        content: forumPosts.content,
+        isFlagged: forumPosts.isFlagged,
+        flagReason: forumPosts.flagReason,
+        createdAt: forumPosts.createdAt,
+        updatedAt: forumPosts.updatedAt,
+        commentCount: sql<number>`COUNT(DISTINCT ${forumComments.id})::int`,
+      })
+      .from(forumPosts)
+      .leftJoin(forumComments, eq(forumComments.postId, forumPosts.id))
+      .where(eq(forumPosts.forumId, forumId))
+      .groupBy(forumPosts.id)
+      .orderBy(desc(forumPosts.createdAt));
+    
+    return posts;
+  }
+
+  async getForumPost(id: string): Promise<ForumPost | undefined> {
+    const [post] = await db
+      .select()
+      .from(forumPosts)
+      .where(eq(forumPosts.id, id));
+    return post;
+  }
+
+  async createForumPost(insertPost: InsertForumPost): Promise<ForumPost> {
+    const [post] = await db
+      .insert(forumPosts)
+      .values(insertPost)
+      .returning();
+    return post;
+  }
+
+  async deleteForumPost(id: string, userId: string): Promise<void> {
+    await db
+      .delete(forumPosts)
+      .where(and(eq(forumPosts.id, id), eq(forumPosts.userId, userId)));
+  }
+
+  async flagForumPost(id: string, reason: string): Promise<void> {
+    await db
+      .update(forumPosts)
+      .set({
+        isFlagged: true,
+        flagReason: reason,
+      })
+      .where(eq(forumPosts.id, id));
+  }
+
+  async getForumComments(postId: string): Promise<ForumComment[]> {
+    return await db
+      .select()
+      .from(forumComments)
+      .where(eq(forumComments.postId, postId))
+      .orderBy(forumComments.createdAt);
+  }
+
+  async createForumComment(insertComment: InsertForumComment): Promise<ForumComment> {
+    const [comment] = await db
+      .insert(forumComments)
+      .values(insertComment)
+      .returning();
+    return comment;
+  }
+
+  async deleteForumComment(id: string, userId: string): Promise<void> {
+    await db
+      .delete(forumComments)
+      .where(and(eq(forumComments.id, id), eq(forumComments.userId, userId)));
+  }
+
+  async flagForumComment(id: string, reason: string): Promise<void> {
+    await db
+      .update(forumComments)
+      .set({
+        isFlagged: true,
+        flagReason: reason,
+      })
+      .where(eq(forumComments.id, id));
   }
 }
 
